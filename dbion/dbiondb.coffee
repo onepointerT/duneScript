@@ -1,6 +1,8 @@
+import { stringify } from 'yaml/dist/stringify/stringify.js'
 # dbiondb_config = require('dbiondb_config')
 
 import './dbiondb.config.js'
+import File from '../coffeelib/path.js'
 
 
 path_dir_get: (dpathstr) ->
@@ -10,7 +12,7 @@ path_dir_get: (dpathstr) ->
     return paths
 
 
-class DataObject
+export class DataObject
     _check_compat: (datastr) ->
         return this._check_compat(datastr);
 
@@ -18,61 +20,100 @@ class DataObject
         return _check_compat(datastr)
 
     parse_datastr: (datastr) ->
-        if is_compatible(datastr)
-            return @__do_derived__.parse_datastr(datastr)
         return {}
 
     constructor: (datastr) ->
-        @__do_derived__ = this
-        @_data = this.parse_datastr(datastr)
+        @data = this.parse_datastr(datastr)
 
     get: (key) ->
-        return @_data[key]
+        return @data[key]
 
     set: (key, value) ->
-        return @_data[key] = value
+        return @data[key] = value
+
+import YAML from 'yaml'
 
 
-import { readFile } from 'node:fs'
-
-
-class Yaml extends DataObject
+export class Yaml extends DataObject
     _check_compat: (datastr) ->
         return true
 
     parse_datastr: (datastr) ->
-        if this._check_compat(datastr)
-            vars = {}
-            varname = ''
-            varval = ''
-            for i in datastr.length()
-                if datastr[i] is '{'
-                  ## TODO Wrong parsing
-                    pos_dct_end = datastr.find('}', i)
-                    if pos_dct_end isnt undefined
-                        varval = datastr[i+1..pos_dct_end-1]
-                        vars[varname] = { varval } 
-                        var_rec = parse_datastr(varval)
-                        if var_rec.length() > 1
-                            vars[var_name] = var_rec
-                else if datastr[i] is '['
-                    pos_lst_end = datastr.find('[', i)
-                    if pos_lst_end isnt undefined
-                        varval = datastr[i+1..pos_lst_end-1]
-                        vars[varname] = [ varval ]
-                    var_rec = parse_datastr(varval)
-                    if var_rec.length() > 1
-                        vars[var_name] = var_rec
-                else if datastr[i] is ':'
-                    varval = datastr[i+1..datastr.find('\n', i+1)]
-                    varname = datastr[i-datastr.rfind(' ', i-1)..i-1]
-                    vars[var_name] = varval
-                else
-                    # TODO
-                    vars += parse_datastr(datastr)
-            return vars
-        return {}
+        @data = YAML.parse datastr
+        return get()
+    
+    parse_file: () ->
+        file = new File @filepath
+        file_contents = file.read
+        return parse_datastr file_contents
 
-    constructor: (datastr) ->
-        @__do_derived__ = this
+    stringify: () ->
+        return YAML.stringify @data
+
+    write_file: () ->
+        file = new File @filepath
+        return file.writeFile stringify()
+
+    constructor: (@filepath, datastr = '') ->
         super datastr
+        @data = parse_datastr datastr
+
+    write_file: (fpath) ->
+        file = new Yaml fpath
+        return file.write stringify()
+
+    read: (fpath) ->
+        file = new Yaml fpath
+        return file.readSync()
+
+
+import JSON5 from 'json5'
+
+export class Json extends DataObject
+    _check_compat: (datastr) ->
+        return true
+
+    parse_datastr: (datastr) ->
+        @data = JSON5.parse datastr
+        return get()
+    
+    parse_file: () ->
+        file = new File @filepath
+        file_contents = file.read
+        return parse_datastr file_contents
+
+    stringify: () ->
+        return JSON5.stringify @data
+
+    write_file: (fpath = @filepath) ->
+        file = new File fpath
+        return file.write stringify()
+
+    read: (fpath) ->
+        file = new Yaml fpath
+        return file.parse_file()
+
+    write: (fpath, finput) ->
+        file = Yaml fpath, finput
+        return file.write_file
+
+    constructor: (@filepath, datastr = JSON5.load('{}')) ->
+        super datastr
+        @data = parse_datastr datastr
+
+
+export class FileHandler
+    ds_write: (fpath, finput) ->
+        return Yaml.write fpath finput
+    
+    ds_read: (fpath) ->
+        return Yaml.read fpath
+    
+    ds_write: (table, dsid, dscontent) ->
+        path = table + '/' + dsid + '.json'
+        return FileHandler.ds_write path dscontent
+    
+    ds_read: (table, dsid) ->
+        path = table + '/' + dsid + '.json'
+        return FileHandler.ds_read path
+    

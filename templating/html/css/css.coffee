@@ -14,10 +14,10 @@ purecss =
             {{ css.includecss_multi(#{ modulehrefs })  }}
         "
         return jinja
+    
+    import Yaml from '../../../dbion/dbiondb.js'
 
-   yml = require('../../../dbion/yaml.js')
-
-   menu =
+    menu =
         menu: yml.Yaml.load('./css.yml')
         addmenu_cssstyle: () ->
             html = "<style>

@@ -25,7 +25,8 @@ class CoffeeCompiler:
         cmd = 'coffee --bare --no-header --compile {0}'.format(fp)
         print("    => {0}".format(cmd))
 
-        os.system(cmd)
+        if os.system(cmd) != 0:
+            exit(1)
 
     @staticmethod
     def _handle_file_list(file_lst: list):
