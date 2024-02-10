@@ -1,0 +1,13 @@
+{
+  "name": "duneScript",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run flow ./dbion"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onepointerT/duneScript.git"
+  },
+  "license": "Apache2"
+}

@@ -1,0 +1,28 @@
+{% import 'css.jinja' as css %}
+
+{% macro heading(headingstr) %}
+    <span class="pure-menu-heading">{{ headingstr }}</span>
+{% endmacro %}
+
+
+{% macro menuitem(href, name) %}
+    <li class="pure-menu-item">
+        <a href="{{ href }}" class="pure-menu-link">{{ name }}</a>
+    </li>
+{% endmacro %}
+
+{% macro menu(headingstr: str, menu_type: str) %}
+    {% if menu_type == 'vertical' %}
+    <div class="pure-menu custom-restricted-width">
+    {% elif menu_type == 'horizontal' %}
+    <div class="pure-menu pure-menu-horizontal">
+    {% endif %}
+
+    {{ heading(headingstr) | if len(headingstr) > 0 }}
+
+    <ul class="pure-menu-list>
+    {% block menu_items %}{% endblock %}
+
+    </ul>
+    </div>
+{% endmacro %}
