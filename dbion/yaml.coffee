@@ -1,6 +1,6 @@
-// @flow
+# @flow
 
-strfind: (str ###: string ###, findstr ###: string ###, pos = 0 ###: Integer ###, pos_until = 0 ###: Integer ###) ->
+strfind: (str, findstr, pos = 0, pos_until = 0) ->
     if pos > 0
         _opstr = str[pos..]
     else if pos_until > 0 and pos > 0
@@ -13,7 +13,7 @@ strfind: (str ###: string ###, findstr ###: string ###, pos = 0 ###: Integer ###
         return i
     return 0
 
-strfindr: (str ###: string ###, findstr ###: string ###, pos = 0 ###: Integer ###, pos_until = 0 ###: Integer ###) ->
+strfindr: (str, findstr, pos = 0, pos_until = 0) ->
     if pos > 0
         _opstr = str[pos..].reverse()
     else if pos_until > 0 and pos > 0
@@ -27,10 +27,10 @@ strfindr: (str ###: string ###, findstr ###: string ###, pos = 0 ###: Integer ##
     return 0
 
 
-_parse_until_line_end: (datastr ###: string ###) ->
+_parse_until_line_end: (datastr) ->
     return datastr[0..strfind(datastr, '\n')]
 
-_parse_sequence: (datastr ###: string ###, start ###: Integer ###) ->
+_parse_sequence: (datastr, start) ->
     lane_start = datastr[start]
     i = strfind(datastr, '- ', start)
     elements = []
@@ -46,7 +46,7 @@ _parse_sequence: (datastr ###: string ###, start ###: Integer ###) ->
     return elements
 
 
-_parse_mapping: (datastr ###: string ###, start ###: Integer ###) ->
+_parse_mapping: (datastr, start) ->
     ls = start
     d = strfind(datastr, ': ', start)
     elements = {}
@@ -63,7 +63,7 @@ _parse_mapping: (datastr ###: string ###, start ###: Integer ###) ->
     return elements
 
 
-_parse_mapping_sequence: (datastr ###: string ###, start ###: Integer ###) ->
+_parse_mapping_sequence: (datastr, start) ->
     elements = {}
     ls = start
     while d = strfind(datastr, ': ', ls) isnt undefined
@@ -72,7 +72,7 @@ _parse_mapping_sequence: (datastr ###: string ###, start ###: Integer ###) ->
     return elements
 
 
-_parse_sequence_of_mappings: (datastr ###: string ###, start ###: Integer ###) ->
+_parse_sequence_of_mappings: (datastr, start) ->
     elements = []
     ls = start
     while d = strfind(datastr, '- ', ls) isnt undefined
@@ -81,7 +81,7 @@ _parse_sequence_of_mappings: (datastr ###: string ###, start ###: Integer ###) -
     return elements
 
 
-_parse_sequence_of_sequences: (datastr ###: string ###, start ###: Integer ###) ->
+_parse_sequence_of_sequences: (datastr, start) ->
     elements = []
     ls = start
     while d = strfind(datastr, '- [', ls) isnt undefined
@@ -95,7 +95,7 @@ _parse_sequence_of_sequences: (datastr ###: string ###, start ###: Integer ###) 
     return elements
 
 
-_parse_mapping_of_mappings: (datastr ###: string ###, start ###: Integer ###) ->
+_parse_mapping_of_mappings: (datastr, start) ->
     elements = {}
     ls = start
     while d = strfind(datastr, ': ', ls) isnt undefined
@@ -103,9 +103,6 @@ _parse_mapping_of_mappings: (datastr ###: string ###, start ###: Integer ###) ->
         key = datastr[ls..d-1]
         elements[key] = elem
     return elements
-
-
-_
 
 
 YamlTypes =
@@ -120,11 +117,16 @@ YamlTypes =
     GenericYaml: "generic_yaml"
 
 
-    whats_this: (datastr ###: string ###, start ###: Integer ###, end = start ###: Integer ###) ->
+    whats_this: (datastr, start, end = start) ->
         # TODO:
-        if end isnt start
+        # if end isnt start
 
         return YamlTypes.GenericYaml
 
 
-_parse_elem: (datastr ###: string ###, start ###: Integer ###) ->
+_parse_elem: (datastr, start) ->
+
+
+class Yaml
+  load: (pathstr) ->
+    return {}

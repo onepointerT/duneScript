@@ -1,13 +1,17 @@
 {
   "name": "duneScript",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.0.1",
+  "private": false,
   "scripts": {
-    "dev": "npm run flow ./dbion"
+    "dev": "python ./dunedev.py compile .",
+    "test": "python ./dunedev.py compile coffeelib"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/onepointerT/duneScript.git"
   },
-  "license": "Apache2"
+  "license": "Apache2",
+  "dependencies": {
+    "flow": "^0.2.3"
+  }
 }
