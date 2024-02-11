@@ -94,8 +94,47 @@
     
         <legend>{{ headingstr }}</legend>
         {{ fieldset(form_blockname, form_type) }}
-        {% block fieldsets_{{ form_blockname }} %}
-        
-        {% endblock fieldsets_{{ form_blockname }} %}
+        {% block "fieldsets_{{ form_blockname }}" %}{% endblock %}
     </form>
+{% endmacro %}
+
+
+{% macro table_element(content_list: list) %}
+
+    {% for table_cell in content_list %}
+        <td>{{ table_cell }}</td>
+    {% endfor %}
+
+{% endmacro %}
+
+
+{% macro tablerows(tablerow_lists: list) %}
+
+    {% for tablerow in tablerow_lists %}
+        <tr>
+            {{ table_element(tablerow)  }}
+        </tr>
+    {% endfor %}
+
+{% endmacro %}
+
+
+{% macro table(headinglist: list, name: str, css_classes="pure-table-striped") %}
+    <table id="{{ name }}" class="pure-table {{ css_classes }}">
+        <thead><tr>
+            {% for headingelem in headinglist %}
+                <th>{{ headingelem }}</th>
+            {% endfor %}
+        </tr></thead>
+        <tbody>
+            {% block "{{ name }}_content" %}{% endblock %}
+        </tbody>
+    </table>
+{% endmacro %}
+
+
+{% macro table_add_row(blockname: str, table_values: list) %}
+    {% block "{{ blockname }}_content" %}
+        {{ tablerows(table_values) }}
+    {% endblock %}
 {% endmacro %}

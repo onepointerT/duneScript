@@ -23,3 +23,15 @@
       ]
   }
 ]
+- tables: [
+    - testtable: {
+      heading: "A test table.",
+      type: "default",
+      nameid: "testtable",
+      ## Can be one of ["", "pure-table-horizontal", "pure-table-bordered", "pure-table-striped"]
+      cssclass: "",
+      columns: ["#", "Name", "Description"],
+      valuemap: ["#{ds.id}", "#{ds.name}", "#{ds.descr}"],
+      values: []
+    }
+]
