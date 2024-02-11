@@ -17,13 +17,13 @@ def load_globals_from_ds(fname: Path, tmpl_name: str = str()) -> dict:
     return dict(FileHandler.ds_read(fpath, False))
 
 
-def load_globals_from_ds_multi(ds_paths: [str]):
+def load_globals_from_ds_multi(ds_paths: list = [str]):
     tmpl_globals = dict()
     for ds_path in ds_paths:
         tmpl_globals += DBiON.loadds(ds_path)
     return tmpl_globals
 
-
+# TODO: Load Jinja values from database
 class JinjaTemplate:
     _template = None
     _globals = dict()
@@ -54,13 +54,15 @@ class JinjaTemplate:
         if self._template is not None:
             self._template.globals = self._globals
 
-    def generate(self, *args, **kwargs):
-        return self._template.render(args, kwargs)
+    def generate(self):
+        print("=> Generating '{0}'".format(self._fpath))
+        return self._template.render()
 
     # If a file could change on disk, use this function (this is happening since we loaded the file in the constructor)
-    def generate_now(self, *args, *kwargs):
+    def generate_now(self):
         self._update_template()
-        return self.generate(args, kwargs)
+        self.update_globals()
+        return self.generate()
 
     # For HTML templating a template should be generated twice,
     # once recursively fetch includes, once update it's globals
@@ -81,14 +83,32 @@ class JinjaCoffeeTemplate(JinjaTemplate):
         self._template.filename = fname
 
     def generate(self):
-        return FileHandler.fread(fname.__str__())
+        return self._template.render()
+    
+    def generateTo(self, fpath):
+        tmpl_gen = self.generate_now()
+        with open(fpath, 'rw') as f:
+            f.write(tmpl_gen)
+            f.close()
+        return tmpl_gen
 
+    @staticmethod
+    def gen(fpath, topath = ''):
+        jct = JinjaCoffeeTemplate(fpath)
+
+        if len(topath) > 0:
+            jc = jct.generateTo(topath)
+        else:
+            jc = jct.generate_now()
+        
+        return jc
+    
 
 class JinjaEnvironment:
-    _env = Environment()
-    _known_templates: [Path] = [Path]
+    _env = Environment(variable_start_string=_variable_start_string, variable_end_string=_variable_end_string)
+    _known_templates: list = [Path]
 
-    def __init__(self, known_templates: [Path] = [Path]):
+    def __init__(self, known_templates: list = [Path]):
         self._known_templates = known_templates
 
     def templates(self):
@@ -96,3 +116,8 @@ class JinjaEnvironment:
 
     def environment(self) -> Environment:
         return self._env
+    
+    def gen(self):
+        for path in self._known_templates:
+            if path.__str__().find('.jinja.coffee'):
+                JinjaCoffeeTemplate.gen(path.__str__(), path.__str__().replace('.jinja', ''))

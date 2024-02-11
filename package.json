@@ -4,7 +4,7 @@
   "private": false,
   "scripts": {
     "dev": "python ./dunedev.py compile .",
-    "test": "python ./dunedev.py compile coffeelib"
+    "jinja": "python ./dunedev.py jinja ./templating/html/css"
   },
   "repository": {
     "type": "git",

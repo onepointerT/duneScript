@@ -1,11 +1,11 @@
-exec  = require('child_process').exec
+exec  = require('child_process').execSync
 
 
-subprocess: (path_to_binary) ->
-    exec(path_to_binary,
-        (error, stdout, stderr) =>
-            console.log('stdout:', stdout);
-            console.log('stderr:', stderr);
-            if error isnt null
-                console.log('exec error:', error)
-        )
+subprocess: (cmd) ->
+    execSync(cmd,
+            (error, stdout, stderr) =>
+                console.log('stdout:', stdout);
+                console.log('stderr:', stderr);
+                if error isnt null
+                    console.log('exec error:', error)
+            )

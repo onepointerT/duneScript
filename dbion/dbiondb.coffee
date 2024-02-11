@@ -37,10 +37,13 @@ import YAML from 'yaml'
 export class Yaml extends DataObject
     _check_compat: (datastr) ->
         return true
+    
+    data: () ->
+        return @data
 
     parse_datastr: (datastr) ->
         @data = YAML.parse datastr
-        return get()
+        return data()
     
     parse_file: () ->
         file = new File @filepath
@@ -56,15 +59,16 @@ export class Yaml extends DataObject
 
     constructor: (@filepath, datastr = '') ->
         super datastr
-        @data = parse_datastr datastr
+        @data = parse_file()
 
-    write_file: (fpath) ->
-        file = new Yaml fpath
-        return file.write stringify()
+    write: (fpath, finput) ->
+        file = new Yaml fpath finput
+        file.write_file stringify()
+        return file
 
     read: (fpath) ->
         file = new Yaml fpath
-        return file.readSync()
+        return file
 
 
 import JSON5 from 'json5'
@@ -72,10 +76,13 @@ import JSON5 from 'json5'
 export class Json extends DataObject
     _check_compat: (datastr) ->
         return true
+    
+    data: () ->
+        return @data
 
     parse_datastr: (datastr) ->
         @data = JSON5.parse datastr
-        return get()
+        return data()
     
     parse_file: () ->
         file = new File @filepath
@@ -90,16 +97,17 @@ export class Json extends DataObject
         return file.write stringify()
 
     read: (fpath) ->
-        file = new Yaml fpath
-        return file.parse_file()
+        file = new Json fpath
+        return file
 
     write: (fpath, finput) ->
-        file = Yaml fpath, finput
-        return file.write_file
+        file = new Json fpath, finput
+        file.write_file
+        return file
 
     constructor: (@filepath, datastr = JSON5.load('{}')) ->
         super datastr
-        @data = parse_datastr datastr
+        @data = parse_file()
 
 
 export class FileHandler
@@ -110,10 +118,10 @@ export class FileHandler
         return Yaml.read fpath
     
     ds_write: (table, dsid, dscontent) ->
-        path = table + '/' + dsid + '.json'
+        path = table + '/' + dsid + '.yml'
         return FileHandler.ds_write path dscontent
     
     ds_read: (table, dsid) ->
-        path = table + '/' + dsid + '.json'
+        path = table + '/' + dsid + '.yml'
         return FileHandler.ds_read path
     
