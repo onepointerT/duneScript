@@ -1,5 +1,6 @@
 {% import 'css.jinja' as css %}
 
+
 {% macro heading(headingstr) %}
     <span class="pure-menu-heading">{{ headingstr }}</span>
 {% endmacro %}
@@ -11,7 +12,7 @@
     </li>
 {% endmacro %}
 
-{% macro menu(headingstr: str, menu_type: str) %}
+{% macro menu(headingstr: str, menu_type: str, menu_item_blockname: str = 'main_menu_items') %}
     {% if menu_type == 'vertical' %}
     <div class="pure-menu custom-restricted-width">
     {% elif menu_type == 'horizontal' %}
@@ -20,9 +21,27 @@
 
     {{ heading(headingstr) | if len(headingstr) > 0 }}
 
-    <ul class="pure-menu-list>
-    {% block menu_items %}{% endblock %}
-
+    <ul class="pure-menu-list">
+    {% block {{ menu_item_blockname }} %}{% endblock %}
     </ul>
+
     </div>
+{% endmacro %}
+
+
+{% macro fieldset(form_blockname: str, form_type='default') %}
+
+    
+
+{% endmacro %}
+
+
+{% macro form(headingstr: str, form_blockname: str, form_type='default') %}
+    {% if form_type == 'default' %}
+    <form class="pure-form">
+    {% endif %}
+    
+        <legend>{{ headingstr }}</legend>
+        {{ fieldset(form_blockname, form_type) }}
+    </form>
 {% endmacro %}
