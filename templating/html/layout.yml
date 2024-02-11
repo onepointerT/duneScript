@@ -1,0 +1,7 @@
+- page:
+  - pagename: "#{layout.css.heading}"
+  - author: "Sebastian Lau"
+  - author_email: "sebastianlau995@gmail.com"
+  - copyright: 'Copyright 2024'
+  - footer: '&copy; #{layout.copyright} by <a href="mailto:@#{ layout.author_email }">#{ layout.author }</a>'
+  - extends: ['pure.html']

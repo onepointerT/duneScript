@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+{% block layoutHdr %}{% endblock layoutHdr %}
+
+<script src="layout.js">
+    <script src="css/css.js">
+        
+    </script>
+    layout.css.make_layout()
+</script>
+
+{% extends "pure.html" %}
+
+
+<body>
+<div id="content">
+    {% block content %}
+        <script>layout.content.make_content()</script>
+    {% endblock content %}
+</div>
+<div id="footer">
+    {% block footer %}
+        <script>layout.content.make_footer()</script>
+    {% endblock footer %}
+</div>
+</body>
+
+</html>

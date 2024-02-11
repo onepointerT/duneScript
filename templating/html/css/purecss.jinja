@@ -29,19 +29,73 @@
 {% endmacro %}
 
 
-{% macro fieldset(form_blockname: str, form_type='default') %}
+{% macro button_submit(name: str, css_classes="pure-button-primary") %}
+    <button type="submit" class="pure-button {{ css_classes }}">{{ name }}</button>
+{% endmacro %}
 
-    
+
+{% macro field_of_form(yml_formlist_field: list) %}
+
+    {% set name = str({{ yml_formlist_field[0] }}) %}
+    {% set placeholder = str({{ yml_formlist_field[1] }}) %}
+
+    {% if {{ yml_formlist_field[2] }} is not None %}
+        {% set type = str({{ yml_formlist_field[2] }}) %}
+        {% if type == 'text' or type == 'email' %}
+            <input type="{{ type }}" id="{{ name }}" placeholder="{{ placeholder }}" />
+        {% elif type == 'submit' %}
+            <button type="submit" id="{{ name }}" class="pure-button pure-button-primary">{{ placeholder }}</button>
+        {% elif type == 'checkbox' %}
+                <label for="{{ name }}" class="pure-checkbox">
+                    <input type="checkbox" id="{{ name }}" value="" /> {{ placeholder }}
+                </label>
+        {% elif type == 'dropdown' %}
+            {% set dropdown_options = {{ yml_formlist_field[3] }} | list() %}
+            <select id="{{ name }}" class="pure-input-1-2">
+                {% for option in dropdown_options %}
+                    <option>{{ option }}</option>
+                {% endfor %}
+            </select>
+        {% elif type == 'radio' %}
+            {% set radio_options = {{ yml_formlist_field[3] }} | list() %}
+            {% for option in radio_options %}
+                <label for="{{ name }}" class="pure-radio">
+                    <input type="radio" id="{{ name }}" value="" /> {{ placeholder }}
+                </label>
+        {% endif %}
+    {% else %}
+    <input type="text" id="{{ str(yml_formlist_field[0]) }}" placeholder="{{ str(yml_formlist_field[1]) }}" />
+    {% endif %}
+{% endmacro %}
+
+
+{% macro fieldset(yml_formlist: list, form_blockname: str = '') %}
+    <fieldset>
+    {% for field in yml_formlist %}
+        {{ field_of_form(field) }}
+    {% endfor %}
+    </fieldset>
+
+    {% if len(form_blockname) > 0 %}
+        {% block {{ form_blockname }} %}{% endblock {{ form_blockname }} %}
+    {% endif %}
 
 {% endmacro %}
 
 
-{% macro form(headingstr: str, form_blockname: str, form_type='default') %}
+{% macro form(headingstr: str, form_blockname: str, yml_formlist: list, form_type='default') %}
     {% if form_type == 'default' %}
     <form class="pure-form">
+    {% elif form_type == 'stacked' %}
+    <form class="pure-form pure-form-stacked">
+    {% elif form_type == 'aligned' %}
+    <form class="pure-form pure-form-aligned">
     {% endif %}
     
         <legend>{{ headingstr }}</legend>
         {{ fieldset(form_blockname, form_type) }}
+        {% block fieldsets_{{ form_blockname }} %}
+        
+        {% endblock fieldsets_{{ form_blockname }} %}
     </form>
 {% endmacro %}

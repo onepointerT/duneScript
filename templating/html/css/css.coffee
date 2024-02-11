@@ -1,6 +1,7 @@
 import Yaml from 'dbion/dbiondb'
     
-cssyml = require('./css.yml')
+# yml = Yaml.read('./css.yml').data()
+cssyml = require('./css.yml') assert { type: 'yaml' }
 
 purecss =
    version: '3.0.0'
@@ -9,6 +10,8 @@ purecss =
    modulehrefs: href + m for m in modules
    menuitems: cssyml.menuitems
    menu_type: 'vertical'
+   html_out: 'pure.html'
+   yml: cssyml
 
    includecss: () ->
         jinja = """{% include 'css.jinja' as css %}
@@ -17,7 +20,7 @@ purecss =
         """
         return jinja
 
-    menu =
+    menu:
         addmenu_cssstyle: () ->
             html = """<style>
                 .custom-restricted-width {
@@ -59,10 +62,15 @@ purecss =
         addtolayout_hdr: (vertical = true, additionalMenuItems = []) ->
             return make_menu(vertical, additionalMenuItems = [])
 
-    form =
+    form:
         types: {
             Default: 'default'
             Stacked: 'stacked'
             Aligned: 'aligned'
         }
-        make_form: (form) ->
+
+        make_form: (heading, form_type = form.types.Default, formlist, form_blockname = '') ->
+            return "{{ pure.form(#{heading}, #{form_blockname}, #{form_blocklist}, #{form_type}) }}"
+    
+    make_layout: () ->
+        return """"""
