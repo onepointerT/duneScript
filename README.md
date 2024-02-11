@@ -37,9 +37,12 @@ directories
 #### Teas
 ###### A template environment artifical solver
 
-A template environment solver that can operate on `.css`, `.html`, `.coffee` and DBiON. Uses native jinja 3  and needs a python app.
+A template environment solver that can operate on `.css`, `.html`, `.coffee` and DBiON. Uses native jinja 3  and can handle html also when a dataset is changed.
 
 ````
 directories
-- templating 
+- templating
+\-- example_webpage
+\-- html
+\--\-- css
 ````

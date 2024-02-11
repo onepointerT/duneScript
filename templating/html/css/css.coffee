@@ -73,4 +73,4 @@ purecss =
             return "{{ pure.form(#{heading}, #{form_blockname}, #{form_blocklist}, #{form_type}) }}"
     
     make_layout: () ->
-        return """"""
+        return """<title>#{cssyml.heading}</title>"""

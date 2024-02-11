@@ -10,7 +10,7 @@
       blockname: "testform_block",
       heading: "Just to test.",
       type: "default",
-      ## A Form list consists of tuples [label, name, input_type='text', descr='', with_multi_state=[]],
+      ## A Form list consists of tuples [label, name, input_type='text', with_multi_state=[]],
       ### where descr and input_type are optional and multi_state is only to be filled on drop-down menus
       ### input_type can be any of ["text", "email", "dropdown", "submit", "checkbox", "radio"]
       ## If multiple elements are found in formlist, they are created in each fieldset per element
@@ -18,7 +18,7 @@
       formlist: [
         ['name', 'Name'],
         ['email', "E-Mail", "email"],
-        ['multi-state', "State", "dropdown", '', ['NRW', 'BW', 'NS', 'SA', 'MV', 'BAY']],
+        ['multi-state', "State", "dropdown", ['NRW', 'BW', 'NS', 'SA', 'MV', 'BAY']],
         ['testform_submit', "Sign in", "submit"]
       ]
   }
