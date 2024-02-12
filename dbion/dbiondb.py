@@ -10,9 +10,12 @@ import yaml
 def __genuuid__():
     return str(uuid4()).replace('-', '')
 
+def genuuid():
+    return str(uuid4())
+
 
 ## DB variables
-_dbionpath = Path('./examples/dbion')
+_dbionpath = Path('./examples')
 _dbpath = str('dbiondb')
 _dbcpath = Path(_dbionpath.__str__() + '/' + _dbpath.__str__())
 _dblpath = Path(_dbionpath.__str__() + '/db')
@@ -22,7 +25,7 @@ _dblpath = Path(_dbionpath.__str__() + '/db')
 _dbext = 'yaml'
 # ResT-API-like compositors may have the 'json' extension
 _dbrestext = 'json'
-_tldbfile = str('dbion.yml')
+_tldbfile = str('.dbion.yml')
 
 ## Templating environment
 _templating_globals = 'templating/globals.' + _dbext
@@ -46,7 +49,7 @@ class DerivingObject(object, metaclass=AbstractBaseClass.ABCMeta):
         return func
 
 
-class DataObject(dict, DerivingObject, metaclass=AbstractBaseClass.ABCMeta):
+class DataObject(DerivingObject):
     _data = dict({})
 
     __do_metaclass__ = AbstractBaseClass.ABCMeta
@@ -76,6 +79,10 @@ class DataObject(dict, DerivingObject, metaclass=AbstractBaseClass.ABCMeta):
     @staticmethod
     def is_compatible(self, datastr: str) -> bool:
         return self._check_compat(datastr)
+    
+    @AbstractBaseClass.abstractmethod
+    def tostring(self) -> str:
+        return str(self._data)
 
     @staticmethod
     def from_file(self, fpath: Path):
@@ -104,9 +111,18 @@ class DataObject(dict, DerivingObject, metaclass=AbstractBaseClass.ABCMeta):
     def __dict__(self):
         return self._data
 
+    def __iter__(self):
+        return self._data.__iter__()
+    
+    def __str__(self) -> str:
+        return self.subfunc(self.__do_derived__, 'tostring')(self)
+
 
 class Yaml(DataObject):
     _data = yaml.YAMLObject()
+
+    def tostring(self) -> str:
+        return str(self._data.dump())
 
     def parse_datastr(self, datastr: str) -> dict:
         with datastr as stream:
@@ -125,6 +141,9 @@ class Json(DataObject):
     def _check_compat(self, datastr: str) -> bool:
         return datastr.find('{') < datastr.find('}')
 
+    def tostring(self) -> str:
+        return json.dumps(self._data)
+
     @staticmethod
     def is_compatible(self, datastr: str) -> bool:
         return self._check_compat(datastr, 'json')
@@ -135,12 +154,13 @@ class Json(DataObject):
         return json.loads(datastr)
 
     @staticmethod
-    def yaml(jsonobj: Json) -> object:
-        pass
+    def yaml(jsonobj) -> Yaml:
+        return Yaml(str(jsonobj))
 
     def __init__(self, datastr: str):
         self.__do_derived__ = Json
         super(Json, self).__init__(datastr)
+
 
 
 def _dbion_path_test(createdir = True) -> bool:
@@ -274,10 +294,10 @@ class GlobalSingleton(object):
 
 
 class DBiON(GlobalSingleton):
-    _known_dbs: [str] = [str]
+    _known_dbs: list[str] = [str]
     _hardlink: bool = False
 
-    def __init__(self, dbionpath = './examples/dbion', known_dbpaths: [str] = { '/dbion1' }):
+    def __init__(self, dbionpath = './examples/dbion', known_dbpaths: list[str] = { '/dbion1' }):
         super(DBiON, self).__init__()
         self._known_dbpaths = known_dbpaths
         _dbion_path_set(dbionpath)
@@ -301,6 +321,143 @@ class DBiON(GlobalSingleton):
         if not fpath.exists():
             return dict()
         return FileHandler.ds_read(fpath, False)
+
+    @staticmethod
+    def lookup(field: str) -> str:
+        # TODO:
+
+        return ''
+    
+    
+    class Condition:
+        _lhs = ''
+        _rhs = ''
+        _op = ''
+        _lhc = None
+        _rhc = None
+
+        def _parse(self, cond: str):
+            pos_op = -1
+            if cond.find(' is ') > -1:
+                self._op = ' is '
+                pos_op = cond.find(' is ')
+            elif cond.find(' isnt ') > -1:
+                self._op = ' isnt '
+                pos_op = cond.find(' isnt ')
+            else:
+                for op in [' > ', ' < ', ' >= ', ' =< ']:
+                    if cond.find(op) > -1:
+                        self._op = op
+                        pos_op = cond.find(op)
+                        break
+            
+            # TODO: Admit ' and ' and ' or '
+            if pos_op > -1:
+                self._lhs = cond[:pos_op]
+                self._rhs = cond[pos_op+len(self._op)+1:]
+            else:
+                self._lhs = cond
+
+
+        def __init__(self, cond: str):
+            self._parse(cond)
+        
+        # TODO Write eval and lookup() -> str
+        def eval() -> bool:
+            return True
+
+
+
+    class Table:
+        @staticmethod
+        # tpath can be like 'persons.uid'
+        def parse_tpath(tpath: str) -> dict:
+            pos_last_dot = tpath.rfind('.')
+            return dict(table=tpath[:pos_last_dot-1], field=tpath[pos_last_dot+1:])
+        
+        @staticmethod
+        # Get the path of the table on filesystem
+        def get_tpath(tpath: str) -> Path:
+            tpath_dct = DBiON.Table.parse_tpath(tpath)
+            return _dblpath.joinpath(tpath_dct['table'].replace('.', '/'))
+
+        class Join:
+            _joinlist = dict()
+
+            # Join object can be found in the db.dbion.yml and the *.tbl.yml files
+            def __init__(self, join_obj):
+                self._joinlist['fields'] = join_obj['fields']
+                self._joinlist['join_table'] = join_obj['join_table']
+                self._joinlist['cond'] = join_obj['cond']
+                if join_obj['alias'] is not None:
+                    self._joinlist['alias'] = join_obj['alias']
+                else:
+                    self._joinlist['alias'] = ''
+
+        class Definition(Yaml):
+            _fields = []
+            _cond = None
+            _joins = []
+
+            def get_fields(self) -> list[str]:
+                return self._fields
+        
+            def get_condition(self) -> DBiON.Condition:
+                return self._cond
+            
+            def get_table_joins(self) -> list[DBiON.Table.Join]:
+                return self._joins
+
+            @staticmethod
+            def parse_joins(join_list: list[dict]) -> list[DBiON.Table.Join]:
+                join_elems = []
+
+                for join_elem in join_list:
+                    join = DBiON.Table.Join(join_elem)
+                    join_elem += join
+                
+                return join_elems
+
+            def __init__(self, datastr: str):
+                super().__init__(datastr)
+
+                self._fields = self['fields']
+                self._joins = self.parse_joins(self['joins'])
+                if self['cond'] is not None:
+                    self._cond = DBiON.Condition(self['cond'])
+
+        _name = ''
+        _tabledef = {}
+        _def = None
+
+        def get_definition(self) -> DBiON.Table.Definition:
+            return self._def
+
+        def __init__(self, table_yml: dict):
+            self._name = table_yml['name']
+            self._tabledef = table_yml
+            self._def = DBiON.Table.Definition(table_yml)
+
+
+
+    class DataRequest(Yaml):
+        _rq_dir = Path(_dbionpath + '/data_request')
+        _tmp = _rq_dir.joinpath('tmp')
+        
+        def __init__(self, request_dir: str, fname: str):
+            fp = Path(request_dir).joinpath(fname)
+            if not fp.exists() or not fp.is_file():
+                super().__init__('')
+            else:
+                with open(fp, 'r') as f:
+                    datastr = f.read()
+                    f.close()
+                super().__init__(datastr)
+
+            if len(request_dir) > 0:
+                self._rq_dir = Path(request_dir)
+                self._tmp = Path(request_dir).joinpath('tmp')
+
 
 
 def __new_json_str() -> str:
@@ -370,3 +527,57 @@ class FileHandler:
             f.write(dscontent)
             f.close()
         return True
+    
+    # A DatasetFile has the format uid_tblid_ds_id.yml
+    ## uid and tblid are optional.
+    class DatasetFile:
+        _uid = uuid4()[:7]
+        _tbl_id = uuid4()[9:17]
+        _ds_id = uuid4()[19:]
+        
+        @staticmethod
+        def parse_filename(self, fname: str) -> dict:
+            fn = self.fname()
+            dct = dict(uid='', tbl_id='', ds_id='')
+            # There is UserId, TableId and DatasetId set for this file
+            if fn.count('_') == 2:
+                pos_delim1 = fn.find('_')
+                pos_delim2 = fn.find('_', pos_delim1+1)
+
+                dct['uid'] = fn[:pos_delim1-1]
+                dct['tbl_id'] = fn[pos_delim1+1:pos_delim2-1]
+                dct['ds_id'] = fn[pos_delim2+1:]
+            elif fn.count('_'):
+                pos_delim = fn.find('_')
+                delim1 = fn[:pos_delim-1]
+
+                if delim1.count('-') == 0:
+                    dct['ds_id'] = delim1
+                else:
+                    dct['tbl_id'] = delim1
+                
+                dct['ds_id'] = fn[pos_delim+1:]
+            else:
+                dct['ds_id'] = fn
+
+        def __init__(self, uid: str = uuid4()[:7], ds_id: str = uuid4()[19:], tbl_id: str = uuid4()[9:17])
+            if len(uid) > 0:
+                self._uid = uid
+            if len(tbl_id) > 0:
+                self._tbl_id = tbl_id
+            if len(ds_id) > 0:
+                self._ds_id = ds_id
+
+        def fname(self) -> str:
+            fpn = ''
+            if len(self._uid) > 0:
+                fpn += self._uid + '_'
+            elif len(self._tbl_id) > 0:
+                fpn += self._tbl_id + '_'
+            elif len(self._ds_id) > 0:
+                fpn += self._ds_id
+            return fpn + '.yml'
+        
+        def fpath(self) -> Path:
+            return Path(self.fname())
+
