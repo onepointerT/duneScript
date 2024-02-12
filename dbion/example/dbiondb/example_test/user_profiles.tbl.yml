@@ -1,0 +1,18 @@
+table: {
+  name: 'user_profiles',
+  fields: ['uid', 'last_login', 'img_href'],
+  ## One may could want to join a table with some fields from a new table.
+  joins: [
+    {
+      fields: 'last_login', 
+      join_table: 'users',
+      cond: 'uid is users.uid'
+    },
+    {
+      fields: 'img_href',
+      join_table: 'persons',
+      cond: 'uid is persons.uid',
+      alias: 'img_src'
+    }
+  ]
+}

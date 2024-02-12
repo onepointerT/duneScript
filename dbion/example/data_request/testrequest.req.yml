@@ -1,0 +1,9 @@
+-
+  tname: 'rq_user_what'
+  columns: [users.id, users.name, users.uname, user_profiles.descr, user_profiles.img_href]
+  conditions: "users.id is user_profiles.uid"
+  onempty: ""
+-
+  tname: 'rq_users_table'
+  columns: [users.uname, users.name, users.email, user_profiles.lastlogin, users.id]
+  conditions: "users.id is user_profiles.uid"

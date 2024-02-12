@@ -1,0 +1,5 @@
+table: {
+  name: 'persons',
+  fields: ['uid', 'users.uname alias uname', 'name'],
+  cond: 'uid is users.uid',
+}
