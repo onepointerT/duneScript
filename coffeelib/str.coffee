@@ -23,3 +23,15 @@ strfindr: (str, findstr, pos = 0, pos_until = 0) ->
     for srch_str, i in _opstr[_opstr.length..0] when srch_str is findstr
         return i
     return 0
+
+strreplace: (str, searchstr, replacestr) ->
+    return String(str).replace(searchstr, replacestr)
+
+listtostr: (listelements) ->
+    newstr = '['
+    for elem, i in listelements
+        newstr += String(elem)
+        if i < listelements.length-2  # The last element does not get a comma
+            newstr += ','
+    newstr += ']'
+    return newstr

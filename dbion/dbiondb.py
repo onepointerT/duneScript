@@ -66,7 +66,7 @@ class FileHandler:
             f.close()
 
     @staticmethod
-    def ds_read(fpath: Path, createfile = True) -> Yaml:
+    def ds_read(fpath: Path, createfile = True):
         try:
             with open(fpath, 'r') as f:
                 yml = yaml.safe_load(f)
@@ -447,11 +447,11 @@ class Variable(BivariateDict):
     # That's all what can happen ;)
     def parse(self, varstr: str) -> bool:
         self._dct['varstr'] = varstr
-
+    
         # First test, if we start with an allof-lookup
         if varstr.find('*') == 0 and varstr.rfind('*') == len(varstr)-1:
             self._dct['matchall'] = True
-            self._dct['matchall_varstr'] = varstr[1:len(varstr)-1] # Now without the allow-stars
+            self._dct['matchall_varstr'] = varstr[1:len(varstr)-2] # Now without the allow-stars
             varstr = str(self._dct['matchall_varstr'])
         
         # Now for the prefix
@@ -463,18 +463,22 @@ class Variable(BivariateDict):
         elif varstr.find('#') == 0:
             self._dct['prefix'] = '#'
             self._dct['lookup'] = True
+            varstr = varstr[1:]
         elif varstr.find('$$') == 0: # With this option, the allof-matcher '**' can be omitted, a list of fields may follow
             self._dct['prefix'] = '$$'
             self._dct['matchall'] = True
+            self._dct['matchall_varstr'] = varstr[2:]
             self._dct['lookup'] = True
+            varstr = varstr[2:]
             
             if varstr.rfind('[') > -1:
-                flstr = varstr[varstr.rfind('[')+1:len(varstr)-1]
+                flstr = varstr[varstr.rfind('[')+1:len(varstr)-2]
                 fieldlist = flstr.split(',')
                 self._dct['fieldlist'] = fieldlist
         elif varstr.find('$') == 0:
             self._dct['prefix'] = '$'
             self._dct['lookup'] = True
+            varstr = varstr[1:]
         else:
             self._dct['hasprefix'] = False
 
@@ -543,7 +547,7 @@ class Condition:
         
         if self._op == ' and ' or self._op == ' or ':
             self._lhc = Condition(self._lhs)
-            self._rhs = Condition(self._rhs)
+            self._rhc = Condition(self._rhs)
 
 
     def __init__(self, cond: str):
@@ -559,6 +563,8 @@ class Condition:
             return (self._lhs == self._rhc)
         elif self._op == ' isnt ':
             return (self._lhs != self._rhs)
+        elif len(self._op) == 0:  # TODO This can happen, when we have a lookup field in self._lhs. Returns True for now
+            return True
         return True
 
 
@@ -631,6 +637,8 @@ class LookupRequest(Variable):
         while tablehirarchy.find('#') > -1:
             pos_deref = tablehirarchy.find('#')
             
+            if tablehirarchy[pos_deref+1] == '#':  # A gen id may follow
+                continue
             
             pos_next_table_name = tablehirarchy.find('/', pos_deref)
             if pos_next_table_name == -1:
@@ -639,7 +647,10 @@ class LookupRequest(Variable):
                 pos_next_table_name = len(tablehirarchy) - 1
             
             deref_tbl = LookupRequest.get_table_id(tablehirarchy[pos_deref+1:pos_next_table_name-1])
-            replace_str = tablehirarchy[pos_deref+1:pos_next_table_name-1]
+            replace_str = tablehirarchy[pos_deref:pos_next_table_name-1]
+            
+            printdbg("'{0} dereferenced to {1}".format(tablehirarchy, deref_tbl))
+            
             tablehirarchy.replace(replace_str, deref_tbl)
 
         if tablehirarchy.rfind('.') > -1:  # A field value is omitted for better convenience and usability
@@ -650,7 +661,6 @@ class LookupRequest(Variable):
     ## Often we want to lookup a field's value
     @staticmethod
     def lookup(self, tablename: str, fieldnames: list[str] | str, ds_cond: Condition = None) -> list[str] | list[Yaml]:
-        # TODO
         tabledir = Path(_dbcpath + '/' + LookupRequest.dereference(tablename))
         if not _db_test_compatibility(tabledir):
             return []
