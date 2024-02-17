@@ -83,7 +83,7 @@ class BFS extends Multiqueue
         @queue = new Queue()
 
     next: () ->
-        while queue.length < @queueStrength+1
+        while @queue.length < @queueStrength+1
             elem = super.pop()
             @queue.push elem
         return @queue.pop()
