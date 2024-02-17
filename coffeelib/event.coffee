@@ -27,10 +27,13 @@ class Event
     
     ## Like the function `eventFunctionality` this function can be specialized with `Event::testIntegrity = ->`
     testIntegrity: () ->
-        return True
-    
+        return true
+
     push: (elem) ->
         @multiQueue.push elem
+    
+    pushMulti: (elems) ->
+        @multiQueue.pushMulti elems
     
     pop: () ->
         return @multiQueue.pop()
@@ -38,3 +41,59 @@ class Event
     queue: () ->
         return @multiQueue
 
+
+class EventHandler
+    ## All this functions can be modified with `EventHandler.Private::func_name = ->`
+    class Private
+        @pre_handler_before(event, param = '') ->
+            if not event? or typeof(event) != Event
+                return false
+            # You can specialize this e.g. with `return event.eventFunctionality(@eventQueue)`
+            return event
+        
+        @pre_handler_after(event, param = '') ->
+            if not event? or typeof(event) != Event
+                return false
+            return event
+        
+        @after_handler_before(event, param = '') ->
+            if not event? or typeof(event) != Event
+                return false
+            return event
+        
+        @after_handler_after(event, param = '') ->
+            if not event? or typeof(event) != Event
+                return false
+            return event
+
+    constructor: (@bivariateDict = {}) ->
+        @eventQueue = new Multiqueue(3)
+
+    preDo: (event, param='') -> return event
+    afterDo: (event, param='') -> return event
+
+    # Please modify and specialize in your own classes with `EventHandler::preDo = ->` or `EventHandler::pre = ->`
+    pre: (event, param = '') ->
+        if not event?
+            return param
+        @eventQueue = event.queue()
+
+        # DO SOMETHING BEFORE DOING `ejs.render`
+        Private.pre_handler_before event, param
+        this.preDo event, param
+        Private.pre_handler_after event, param
+        
+        return event
+
+    # Please modify and specialize in your own classes with `EventHandler::afterDo = ->` or `EventHandler::after = ->`
+    after: (event, param = '') ->
+        if not event?
+            return html
+        @eventQueue = event.queue()
+
+        # DO SOMETHING AFTER DOING `ejs.render`
+        Private.after_handler_before event, param
+        this.afterDo event, param
+        Private.after_handler_after event, param
+
+        return event
