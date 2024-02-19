@@ -14,6 +14,9 @@ class Queue extends []
 
     push: (item) ->
         super.push(item)
+    
+    hasElem: () ->
+        return (this.length > 0)
 
 
 class Multiqueue extends Queue
@@ -94,4 +97,7 @@ class BFS extends Multiqueue
     
     pop: () ->
         return this.next()
+    
+    hasElem: () ->
+        return (@queue.length > 0)
 

@@ -97,3 +97,53 @@ class EventHandler
         Private.after_handler_after event, param
 
         return event
+
+
+class EventQueueHandler extends EventHandler
+    constructor: (bivariateDict = {}) ->
+        super(bivariateDict)
+    
+    pre_push: (event, param = '') ->
+        return super.pre event, param
+    
+    after_push: (event, param = '') ->
+        return super.after event, param
+    
+    pre_pop: (event, param = '') ->
+        return super.pre event, param
+    
+    after_pop: (event, element) ->
+        return super.after event, element
+    
+    pre_processing: (event, func, args...) ->
+        return true
+    
+    after_processing: (event, func, args...) ->
+        return true
+        
+
+
+class EventProcessor extends BFS
+    constructor: (@queue_handler = EventQueueHandler()) ->
+        super(3, 4)
+    
+    push: (event) ->
+        @queue_handler.pre_push event
+        super.push event
+        return @queue_handler.after_push event
+    
+    pop: (event) ->
+        @queue_handler.pre_pop event
+        elem = super.pop()
+        elem = @queue_handler.after_pop event, elem
+        return elem
+    
+    process: (func, args...) ->
+        while @queue_handler.hasElem()
+            event = @queue_handler.pop()
+            @queue_handler.pre_processing event, func, args
+            func(args)
+            @queue_handler.after_processing event, func, args
+
+
+
