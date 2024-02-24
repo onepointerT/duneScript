@@ -66,6 +66,10 @@ class Multiqueue extends Queue
         [sq, sql] = this.shortestQueue()
         @queue[sq].push item
     
+    pushIn: (queue_num, item) ->
+        if queue_num < @queue.length
+            @queue[queue_num].push item
+    
     pushMulti: (items) ->
         for item in items
             this.push item
@@ -73,6 +77,11 @@ class Multiqueue extends Queue
     pop: () ->
         [lq, lql] = this.longestQueue()
         return @queue[lq].pop()
+    
+    popOf: (queue_num) ->
+        if queue_num > @queue.length - 1
+            return null
+        return @queue_num[queue_num].pop()
 
 
 

@@ -1,7 +1,8 @@
-# @flow
+
 
 class Pair
     constructor: (@first, @second) ->
+    
 
 
 class Tuple extends Pair

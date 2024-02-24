@@ -97,13 +97,28 @@ class EventHandler
         Private.after_handler_after event, param
 
         return event
+    
+    properties: () -> return @bivariateDict
+
+
+EventQueueHandlerProperties: {
+    process_incoming: false
+}
 
 
 class EventQueueHandler extends EventHandler
-    constructor: (bivariateDict = {}) ->
+    constructor: (bivariateDict = EventQueueHandlerProperties) ->
         super(bivariateDict)
     
+    process_now: (event, param, args...) ->
+        this.pre_processing event, param, args
+        retval = event.eventFunctionality(super)
+        this.after_processing event, param, args
+        return retval
+
     pre_push: (event, param = '') ->
+        if @bivariateDict.process_incoming
+            return this.process_now event, param
         return super.pre event, param
     
     after_push: (event, param = '') ->
@@ -120,16 +135,33 @@ class EventQueueHandler extends EventHandler
     
     after_processing: (event, func, args...) ->
         return true
-        
+
+
+class EventProcessStarter extends Event
+    constructor: (@event_queue_handler, @event_processor) ->
+        super(@event_queue_handler)
+
+    eventFunctionality() ->
+        @event_processor.process()
+
+
+EventProcessorProperties: EventQueueHandlerProperties + {
+    process_after_push: false
+    process_start_event: EventProcessStarterEvent | null
+}
 
 
 class EventProcessor extends BFS
-    constructor: (@queue_handler = EventQueueHandler()) ->
+    constructor: (@queue_handler = EventQueueHandler(EventProcessorProperties), queue_count = 3, queue_main_length = 4) ->
         super(3, 4)
     
     push: (event) ->
         @queue_handler.pre_push event
         super.push event
+        if @queue_handler.properties().process_after_push
+            this.process event.eventFunction, @queue_handler
+        else if typeof(@queue_handler.properties().process_start_event) is typeof(event)
+            event.eventFunctionality(this)
         return @queue_handler.after_push event
     
     pop: (event) ->
@@ -142,8 +174,6 @@ class EventProcessor extends BFS
         while @queue_handler.hasElem()
             event = @queue_handler.pop()
             @queue_handler.pre_processing event, func, args
-            func(args)
+            retval = func(args)
             @queue_handler.after_processing event, func, args
-
-
-
+        return [retval, this, func, args]

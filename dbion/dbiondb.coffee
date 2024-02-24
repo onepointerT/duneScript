@@ -332,7 +332,7 @@ class LookupRequest extends Variable
         if not tabledir.exists()
             return []
         
-        if typeof(fieldnames) == []
+        if typeof(fieldnames) is []
             fieldnames_str = listtostr(fieldnames)
             lup_rq = LookupRequest(tablename + '.' + fieldnames_str + '|*||' + dbiondb_config.db.dbext + '|')
         else
