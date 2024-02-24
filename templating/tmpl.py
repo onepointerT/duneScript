@@ -1,6 +1,6 @@
 from pathlib import Path
 from jinja2 import Environment, Template
-from dbion import DataObject, DBiON, FileHandler, Yaml, path_dir_get
+from dbion import DBiON, FileHandler, Yaml, path_dir_get
 
 
 ## For non-jinja-like files there could/should be another set of variable delimiters
@@ -58,6 +58,13 @@ class JinjaTemplate:
         print("=> Generating '{0}'".format(self._fpath))
         return self._template.render()
 
+    def generateToFile(self):
+        html = self.generate()
+        with open(self._fpath + '.html', 'rw') as f:
+            f.write(html)
+            f.close()
+        return html
+
     # If a file could change on disk, use this function (this is happening since we loaded the file in the constructor)
     def generate_now(self):
         self._update_template()
@@ -68,8 +75,10 @@ class JinjaTemplate:
     # once recursively fetch includes, once update it's globals
     def generate_plus_includes(self, *args, **kwargs):
         self._template = Template(self.generate(args, kwargs))
+        old_template = self._template
         while self._template.find('{% include') > -1:
             self._template = Template(self.generate(args, kwargs))
+        self._template = old_template
         return self.generate(args, kwargs)
 
 
