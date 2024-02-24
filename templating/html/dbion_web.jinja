@@ -1,0 +1,13 @@
+{% macro includedbionweb(href='./dbion_web.js') %}
+    <script src="{{ href }}" type="text/javascript"></script>
+{% endmacro %}
+
+{% macro dbion(statement_or_file, content='') %}
+    <script>
+    {% if len(content) > 0 %}
+        dbion.query({{ statement_or_file }}, {{ content }})
+    {% else %}
+        {% set db_query = dbion.query({{ statement_or_file }}) %}
+    {% endif %}
+    </script>
+{% endmacro %}

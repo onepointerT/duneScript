@@ -1,0 +1,7 @@
+mixin dbion(statement_or_file, content='')
+    script(src="../../../../templating/dbion_web.js")
+    script 
+        if content.length > 0
+            dbion.query #statement_or_file #content 
+        else
+            dbion.query #statement_or_file

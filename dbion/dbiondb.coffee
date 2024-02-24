@@ -402,8 +402,6 @@ class LookupRequest extends Variable
         return lup_rq
 
 
-
-
 class Query extends SqliteQuery
     constructor: (statement_or_file) ->
         super(statement_or_file)
@@ -425,6 +423,8 @@ class Query extends SqliteQuery
 
         if starmee
             statement += '*'
+        
+        return statement
 
     db: () =>
         return LookupRequest.lookup(@config.from, @config.select)
