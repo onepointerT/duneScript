@@ -1,11 +1,12 @@
-#import { Directory } from '../coffeelib/path.coffee'
-import { stringify } from 'yaml/dist/stringify/stringify.js'
+
+import { stringify } from 'yaml/dist/stringify/stringify'
 # dbiondb_config = require('dbiondb_config')
 
 import './dbiondb.config.js'
-import { Conditional } from '../coffeelib/conditional.js'
-import * as path from '../coffeelib/path.js'
-import { strfind, strfindr, strreplace, listtostr } from '../coffeelib/str.js'
+import { Conditional } from '../coffeelib/conditional'
+import * as path from '../coffeelib/path'
+import { SqliteQuery, SqliteQueryProperties } from '../coffeelib/sqlite_query'
+import { strfind, strfindr, strreplace, listtostr } from '../coffeelib/str'
 
 
 path_dir_get: (dpathstr) ->
@@ -36,11 +37,33 @@ export class DataObject
     constructor: (datastr) ->
         @data = this.parse_datastr(datastr)
 
+    stringify: () => return '{}'
+
     get: (key) ->
         return @data[key]
 
     set: (key, value) ->
         return @data[key] = value
+
+    setAll: (content = {}) ->
+        for key, value in content
+            if @data[key] isnt value
+                @data[key] = value
+
+    fromFile: (fpath) ->
+        fd = new path.File fpath
+        if fd.exists() and fd.is_file()
+            return fd.readSync()
+
+    toFile: (fpath, content) ->
+        fromFile fpath
+        setAll content
+        toFile fpath
+
+    toFile: (fpath) ->
+        fd = new path.File
+        fd.writeSync stringify @data 
+
 
 import YAML from 'yaml'
 
@@ -360,9 +383,53 @@ class LookupRequest extends Variable
     
         return yml
 
+    ## Often we want to lookup a field's value
+    @write: (tablename, ds_id, content) ->
+        tabledir = path.Directory(dbiondb_config.db.tabledir + LookupRequest.dereference(tablename))
+        if not tabledir.exists()
+            return {}
+
+        # TODO: Dereference table joins and write them to file
+        # yml = [Yaml]
+        fpath = tabledir + '/' + ds_id + '.' + dbiondb_config.db.dbext
+        yml.toFile fpath, content
+    
+        return yml
+
     eval: () ->
         lup_rq = LookupRequest.lookup(this['tablename'], this['fieldname'])
         # TODO: raise LookupError
         return lup_rq
 
 
+
+
+class Query extends SqliteQuery
+    constructor: (statement_or_file) ->
+        super(statement_or_file)
+    
+    toDbionSyntax: () ->
+        starmee = false
+        if @query.where is ''
+            starmee = true
+        
+        statement = ''
+        if starmee
+            statement += '*'
+        
+        statement += '$$'
+        statement += @query.from
+        statement += '.['
+        statement += @query.select
+        statement += ']'
+
+        if starmee
+            statement += '*'
+
+    db: () =>
+        return LookupRequest.lookup(@config.from, @config.select)
+    
+    db: (content) =>
+        return LookupRequest.write @config.from, content
+        
+        
