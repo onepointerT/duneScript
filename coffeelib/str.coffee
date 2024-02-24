@@ -9,7 +9,7 @@ strfind: (str, findstr, pos = 0, pos_until = 0) ->
         _opstr = str
     for srch_str, i in _opstr when srch_str is findstr
         return i
-    return 0
+    return -1
 
 strfindr: (str, findstr, pos = 0, pos_until = 0) ->
     if pos > 0
@@ -22,7 +22,7 @@ strfindr: (str, findstr, pos = 0, pos_until = 0) ->
         _opstr = str
     for srch_str, i in _opstr[_opstr.length..0] when srch_str is findstr
         return i
-    return 0
+    return -1
 
 strreplace: (str, searchstr, replacestr) ->
     return String(str).replace(searchstr, replacestr)
@@ -44,3 +44,6 @@ genuuidv4: () ->
             v = c == 'x' ? r : (r & 0x3 | 0x8)
             return v.toString(16)
         )
+
+genid: () ->
+    return strreplace(genuuidv4(), '-', '')

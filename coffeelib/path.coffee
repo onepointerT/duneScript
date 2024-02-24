@@ -53,6 +53,9 @@ export class Path
 
     get: () ->
         return @path
+    
+    exists: () ->
+        return not (not fs.existsSync(@path))
 
 
 import { open, opendir } from 'node:fs/promises'
@@ -97,6 +100,10 @@ export class Directory extends Path
             if path.is_file
                 dir_files.push dirent
         return dir_files
+    
+    mkdir: (create_recursive = true) ->
+        if not this.exists()
+            fs.mkdirSync(@path, { recursive: create_recursive })
 
 
 
