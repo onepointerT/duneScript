@@ -1,2 +1,2 @@
-each tablerow in #{tablerow_list}
-    include table_elements { content_list: #{table_row} }
+each var tablerow in #{tablerow_list}
+    include(table_elements, { content_list: #{table_row} })

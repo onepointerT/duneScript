@@ -3,8 +3,10 @@
   "version": "0.0.1",
   "private": false,
   "scripts": {
-    "dev": "python ./dunedev.py compile .",
-    "jinja": "python ./dunedev.py jinja ./templating/html/css"
+    "coffee": "python ./dundev.py compile .",
+    "jade": "python ./dunedev.py jade ./haven/views",
+    "jinja": "python ./dunedev.py jinja ./templating/html/css",
+    "dev": "python ./dunedev.py compile . && python ./dunedev.py jade ./haven/views"
   },
   "repository": {
     "type": "git",

@@ -1,7 +1,7 @@
-table(id="#{tablename}" class="pure-table #{css_classes}")
+table(id="#{tablename}", class="pure-table #{css_classes}")
     thead
         tr
-            each headingelem in #{headinglist}
-            th #{headingelem}
+            each var headingelem in #{headinglist}
+            th #headingelem
     tbody
         block #{tablename}_content
