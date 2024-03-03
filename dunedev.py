@@ -6,7 +6,7 @@ import subprocess
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('dunedev', "Develop duneScript")
 
-    parser.add_argument('action', type=str, help='The action to perform, one out of {compile, jade, jinja}')
+    parser.add_argument('action', type=str, help='The action to perform, one out of {compile, jade, jinja, js2coffee}')
     parser.add_argument('path', type=str, help='A path to the directory that is to be compiled')
 
     args = parser.parse_args()
@@ -28,6 +28,8 @@ if __name__ == '__main__':
     elif args.action == "jinja":
         subprocess.run(['python', './templating/coffeejinja.py', args_path])
         subprocess.run(['python', './compile/coffeec.py', args_path])
+    elif args.action == 'js2coffee':
+        subprocess.run(['python', './compile/js2coffee.py', args_path])
     
 
     exit(0)
