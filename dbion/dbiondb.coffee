@@ -1,8 +1,7 @@
-
 import { stringify } from 'yaml/dist/stringify/stringify'
 # dbiondb_config = require('dbiondb_config')
 
-import './dbiondb.config.js'
+dbiondb_config = await require('./dbiondb.config')
 import { Conditional } from '../coffeelib/conditional'
 import * as path from '../coffeelib/path'
 import { SqliteQuery, SqliteQueryProperties } from '../coffeelib/sqlite_query'
@@ -18,13 +17,22 @@ path_dir_get: (dpathstr) ->
 
 
 class BivariateDict extends {}
-    @default_values: () -> return {};
+    @default_dict = {}
+
+    @default_values: () ->
+        return @default_dict
     
-    constructor: () ->
-        super(default_values())
+    constructor: ({} = default_dct) ->
+        super(default_dct)
+        @default_dict = default_dct
+    
+    reset: () ->
+        super.clear()
+        for key, value in default_values()
+            this[key] = value
 
 
-export class DataObject
+export class DataObj extends BivariateDict
     _check_compat: (datastr) ->
         return this._check_compat(datastr);
 
@@ -35,7 +43,10 @@ export class DataObject
         return {};
 
     constructor: (datastr) ->
-        @data = this.parse_datastr(datastr)
+        data = parse_datastr datastr
+        super(data)
+        @data = data
+        @extension = 'dbion'
 
     stringify: () => return '{}'
 
@@ -53,7 +64,8 @@ export class DataObject
     fromFile: (fpath) ->
         fd = new path.File fpath
         if fd.exists() and fd.is_file()
-            return fd.readSync()
+            content = fd.readSync()
+            @data = this.parse_datastr content
 
     toFile: (fpath, content) ->
         fromFile fpath
@@ -61,14 +73,14 @@ export class DataObject
         toFile fpath
 
     toFile: (fpath) ->
-        fd = new path.File
+        fd = new path.File fpath
         fd.writeSync stringify @data 
 
 
-import YAML from 'yaml'
+import YAML, { Pair } from 'yaml'
 
 
-export class Yaml extends DataObject
+export class Yaml extends DataObj
     _check_compat: (datastr) ->
         return true
     
@@ -93,7 +105,13 @@ export class Yaml extends DataObject
 
     constructor: (@filepath, datastr = '') ->
         super datastr
-        @data = parse_file()
+        if datastr.length > 2
+            @data = parse_datastr datastr
+        else if @filepath.length > 0
+            @data = parse_file()
+        else
+            @data = this.default_values()
+        @extension = 'yml'
 
     @write: (fpath, finput) ->
         file = new Yaml fpath finput
@@ -105,9 +123,17 @@ export class Yaml extends DataObject
         return file
 
 
+yaml_list_merge: (yml_list) ->
+    yml_merged_str = '-\n  '
+    for yml in yml_list
+        yml_merged_str += yml.stringify()
+        yml_merged_str += '\n-\n  '
+    return new Yaml '', yml_merged_str
+
+
 import JSON5 from 'json5'
 
-export class Json extends DataObject
+export class Json extends DataObj
     _check_compat: (datastr) ->
         return true
     
@@ -139,29 +165,102 @@ export class Json extends DataObject
         file.write_file
         return file
 
-    constructor: (@filepath, datastr = JSON5.load('{}')) ->
+    constructor: (@filepath, datastr = '') ->
         super datastr
-        @data = parse_file()
+        if datastr.length > 2
+            @data = parse_datastr datastr
+        else if @filepath.length > 0
+            @data = parse_file()
+        else
+            @data = this.default_values()
+        @extension = 'json'
 
 
-export class FileHandler
+class DataHandler extends DataObj
+    @default_dict = {}
+    @dataHandlerClass = Yaml
+    @dataHandler = new Yaml()
+
+    @default_values: () ->
+        
+    constructor: ({} = default_dct, data_handler_class_override = null) ->
+        super('{}')
+        
+        if dbiondb_config.db.dbext is 'yml'
+            data_handler_class = Yaml
+        else if dbiondb_config.db.dbext is 'json'
+            data_handler_class = Json
+        else if data_handler_class_override isnt null
+            data_handler_class = data_handler_class_override
+            
+        @dataHandlerClass = data_handler_class
+        @default_dict = default_dct
+        @dataHandler = new (typeof @dataHandlerClass)('{}')
+    
+    parse_datastr: (datastr) ->
+        return @dataHandler.parse_datastr datastr
+    
+    get: (key) ->
+        return @dataHandler.get key
+    
+    set: (key, value) ->
+        return @dataHandler.set key, value
+    
+    setAll: (content = {}) ->
+        return @dataHandler.setAll content
+    
+    stringify: () -> return @dataHandler.stringify()
+    
+
+
+
+export class FileHandler extends DataHandler
+    constructor: ({} = default_dct, data_handler_class_override = null) ->
+        if dbiondb_config.db.dbext is 'yml'
+            data_handler_class = Yaml
+        else if dbiondb_config.db.dbext is 'json'
+            data_handler_class = Json
+        else if data_handler_class_override isnt null
+            data_handler_class = data_handler_class_override
+        super(default_dct, data_handler_class)
+
     ds_write: (fpath, finput) ->
-        return Yaml.write fpath finput
+        return @dataHandler.write fpath finput
     
     ds_read: (fpath) ->
-        return Yaml.read fpath
+        return @dataHandler.read fpath
     
     ds_write: (table, dsid, dscontent) ->
-        path = table + '/' + dsid + '.yml'
-        return FileHandler.ds_write path dscontent
+        path = dbiondb_config.db.tabledir + '/' + table + '/' + dsid + '.' + dbiondb_config.db.dbext
+        return this.ds_write path, dscontent
     
     ds_read: (table, dsid) ->
-        path = table + '/' + dsid + '.yml'
-        return FileHandler.ds_read path
+        path = dbiondb_config.db.tabledir + '/' + table + '/' + dsid + '.' + dbiondb_config.db.dbext
+        return this.ds_read path
+
+    tbl_read: (table) ->
+        path = dbiondb_config.db.path + '/' + table + '.' + dbiondb_config.db.dbext
+        return this.ds_read path
+    
+    tbl_write: (table, content) ->
+        path = dbiondb_config.db.path + '/' + table + '.' + dbiondb_config.db.dbext
+        # TODO Tell the event loop to update the database
+        return this.ds_write path, content
+    
+    tbl_collect: ({name, fields, cond = '', joins = [...{}], extension = 'yml', token = gentoken()} = table) ->
+        tabledef_path = new path.Path dbiondb_config.db.tabledir + '/' + table['name'] + dbiondb_config.dbion.tablefilesext
+        return new (typeof @dataHandlerClass)(tabledef_path, '{}')
+
+    db_read: (table) ->
+        pathstr = dbiondb_config.db.path + '/' + table + '.' + dbiondb_config.db.dbext
+        path = new path.File pathstr
+        if not path.exists()
+            this.tbl_collect table
+            return path
     
 
 class Variable extends BivariateDict
-    @default_values: () -> return {
+    @default_values: () ->
         varstr: ''
         prefix: ''
         hasprefix: true
@@ -173,9 +272,9 @@ class Variable extends BivariateDict
         filestr: ''
         filename: ''
         fileext: ''
+        cond: ''
         matchall: false
         fieldlist: []
-    }
 
     # Specs from `dbion/README.md`
     #
@@ -272,6 +371,7 @@ genuuidv4: () ->
 
 genuuid: () -> genuuidv4()
 genid: () ->genuuid()[..7]
+gentoken: () -> genuuid()[23..]
 
 
 class LookupRequest extends Variable
@@ -397,7 +497,12 @@ class LookupRequest extends Variable
         return yml
 
     eval: () ->
-        lup_rq = LookupRequest.lookup(this['tablename'], this['fieldname'])
+        lup_rq = [typeof @dataHandlerClass]
+        if this['fieldlist'].length > 1
+            for field in fieldlist
+                lup_rq.push LookupRequest.lookup(this['tablename'], field)
+        else
+            lup_rq.push LookupRequest.lookup(this['tablename'], this['fieldname'])
         # TODO: raise LookupError
         return lup_rq
 
@@ -431,5 +536,100 @@ class Query extends SqliteQuery
     
     db: (content) =>
         return LookupRequest.write @config.from, content
+
+
+class Table extends DataObject
+    @ext = 'yml'
+    @token = ''
+
+    constructor: ({name, fields, cond = '', joins = [...{}], extension = 'yml', token = gentoken()} = table) ->
+        super(table)
+        if table['extension'] isnt @ext
+            @ext = table['extension']
+        if table['token'] isnt @token
+            @token = table['token']
+        @table = table
+    
+    table: () -> return @table
+    
+    @gen_tabledef: (tabledef) ->
+        tabledef_path = new path.File dbiondb_config.db.tabledir + '/' + tabledef['name'] + dbiondb_config.db.dbfilesext
+        # Update the tabledef that was found
+        tabledef_path.writeSync tabledef.stringify()
+        return this.read_tabledef tabledef['name']
         
+    @gen_tabledef: (table, tabledef) ->
+        tabledef_path = new path.File dbiondb_config.db.tabledir + '/' + table + dbiondb_config.dbion.tablefilesext
+        tabledef = { name: tabledef.name, fields: tabledef.fields, cond: tabledef.cond, joins: if tabledef.joins? then tabledef.joins else [] }
+        json = new Json '', tabledef
+        json.toFile tabledef_path
+        return json
+        
+    @read_tabledef: (table) ->
+        tabledef_path = new path.File dbiondb_config.db.tabledir + '/' + table + dbiondb_config.dbion.tablefilesext
+        json = new Json tabledef_path
+        return json
+
+    @read_tabledef: (dbname) ->
+        tldbf_path = dbiondb_config.dbion.path + '/' + dbiondb_config.dbion.tldbfile
+        dao = new Yaml tldbf_path
+        tables = dao[dbname]['tables']
+        tabledefs = dao[dbname]['tabledef']
+        for tabledef in tabledefs
+            this.gen_tabledef tabledef['name'], tabledef
+        tabledef_list = {}
+        for table in tables
+            json = this.read_tabledef table
+            tabledef_list[table] = json
+        return tabledef_list
+    
+    tabledef_gen: (dbname) ->
+        tabledef_path = new path.File dbiondb_config.db.tabledir + '/' + this.table()['name'] + dbiondb_config.dbion.tablefilesext
+        if tabledef_path.exists()
+            return true
+        tabledef_list = Table.read_tabledef dbname
+        return Table.gen_tabledef tabledef_list[this.table()['name']]
+    
+    tabledef_read: () ->
+        tabledef_path = new path.File dbiondb_config.db.tabledir + '/' + table + dbiondb_config.dbion.tablefilesext
+        if not tabledef_path.exists()
+            Table.gen_tabledef table()
+        return Table.read_tabledef table()['name']
+    
+    # Returns a tuple (intern, extern) table fields
+    fieldlist_filter: () ->
+        fieldlist = table()['fields']
+        fieldlist_filtered_extern = []
+        fieldlist_filtered_intern = []
+        for field in fieldlist
+            if strfind(field, '.') > -1  # There is a lookup or join from another table
+                fieldlist_filtered_extern.push field
+            else
+                fieldlist_filtered_intern.push field
+        return new Pair fieldlist_filtered_intern, fieldlist_filtered_extern
+    
+    @sort_extern_fields_by_table: () ->
+        # TODO
+
+    table_collect: () ->
+        fieldlist_filtered = this.fieldlist_filter()
+        
+        this.reset()
+
+        lup_rq = new LookupRequest '$$' + @table['name'] + '.[' + listtostr(fieldlist_filtered.first) + ']'
+        yml_list = lup_rq.eval()
+        yml = yaml_list_merge yml_list
+
+        # TODO: Lookup extern joins
+
+        dao_path = dbiondb_config.dbion.tabledir + '/' + @table['name'] + dbiondb_config.db.dbext
+        return Yaml.write dao_path, yml.stringify()
+
+
+
+DataHandler::tbl_collect = ->
+    # TODO read table config
+    # TODO set variable according to the fields
+    # table = new Table
+    # return table.table_collect()
         

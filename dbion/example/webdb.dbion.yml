@@ -1,5 +1,5 @@
 - webdb: {
-  tabledir: "./tables",
+  tabledir: "./db",
   requests: "./data_request",
   request_tmp: '#{webdb.requests}/tmp',
   tables: ['persons', 'users', 'user_profiles'],
