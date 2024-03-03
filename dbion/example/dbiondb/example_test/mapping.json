@@ -1,0 +1,19 @@
+{
+    "persons": {
+        "tbl_id": "#persons",
+        "ds_id": "**",
+        "imports": {
+            "uid":  "**",
+            "tbl_id": "#users",
+            "ds_id": "*rjoins*",
+            "rjoins": {
+                "uname": {
+                    "uname": "$users.uname",
+                    "cond": "uid is $users.uid",
+                    "fname": "|uname_#users_**||req.yml|"
+                },
+                "fname": "|rjoins_#persons_##||req.yml|"
+            }
+        }
+    }
+}

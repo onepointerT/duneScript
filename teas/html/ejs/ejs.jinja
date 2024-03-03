@@ -1,0 +1,17 @@
+{% macro import_ejs_handler(url_dir = 'ejs/', own_collections = []) %}
+    <script src="{{ url }}/ejs.js"></script>
+    <script src="{{ url }}/ejs_handler.js"></script>
+
+    {% for own_script in own_collection %}
+        <script src="{{ url }}/{{ own_script }}"></script>
+    {% endfor %}
+{% endmacro %}
+
+{% macro ejs(script_url_or_text, bivariate_dict={}, event={})%}
+    <%= js({{ script_url }}, {{ bivariate_dict }})  %>
+{% endmacro %}
+
+{% macro run(event, ejs_handler, encoding='utf8') %}
+    <!-- TODO: Check, if __FILE__ is enough or use a app.current.filerelative.url -->
+    ejs_tmpl({{ __FILE__ }}, {{ event }}, {{ ejs_handler }}, {{ encoding }})
+{% endmacro %}

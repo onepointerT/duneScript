@@ -1,0 +1,140 @@
+{% import 'css.jinja' as css %}
+
+
+{% macro heading(headingstr) %}
+    <span class="pure-menu-heading">{{ headingstr }}</span>
+{% endmacro %}
+
+
+{% macro menuitem(href, name) %}
+    <li class="pure-menu-item">
+        <a href="{{ href }}" class="pure-menu-link">{{ name }}</a>
+    </li>
+{% endmacro %}
+
+{% macro menu(headingstr: str, menu_type: str, menu_item_blockname: str = 'main_menu_items') %}
+    {% if menu_type == 'vertical' %}
+    <div class="pure-menu custom-restricted-width">
+    {% elif menu_type == 'horizontal' %}
+    <div class="pure-menu pure-menu-horizontal">
+    {% endif %}
+
+    {{ heading(headingstr) | if len(headingstr) > 0 }}
+
+    <ul class="pure-menu-list">
+    {% block {{ menu_item_blockname }} %}{% endblock %}
+    </ul>
+
+    </div>
+{% endmacro %}
+
+
+{% macro button_submit(name: str, css_classes="pure-button-primary") %}
+    <button type="submit" class="pure-button {{ css_classes }}">{{ name }}</button>
+{% endmacro %}
+
+
+{% macro field_of_form(yml_formlist_field: list) %}
+
+    {% set name = str({{ yml_formlist_field[0] }}) %}
+    {% set placeholder = str({{ yml_formlist_field[1] }}) %}
+
+    {% if {{ yml_formlist_field[2] }} is not None %}
+        {% set type = str({{ yml_formlist_field[2] }}) %}
+        {% if type == 'text' or type == 'email' %}
+            <input type="{{ type }}" id="{{ name }}" placeholder="{{ placeholder }}" />
+        {% elif type == 'submit' %}
+            <button type="submit" id="{{ name }}" class="pure-button pure-button-primary">{{ placeholder }}</button>
+        {% elif type == 'checkbox' %}
+                <label for="{{ name }}" class="pure-checkbox">
+                    <input type="checkbox" id="{{ name }}" value="" /> {{ placeholder }}
+                </label>
+        {% elif type == 'dropdown' %}
+            {% set dropdown_options = {{ yml_formlist_field[3] }} | list() %}
+            <select id="{{ name }}" class="pure-input-1-2">
+                {% for option in dropdown_options %}
+                    <option>{{ option }}</option>
+                {% endfor %}
+            </select>
+        {% elif type == 'radio' %}
+            {% set radio_options = {{ yml_formlist_field[3] }} | list() %}
+            {% for option in radio_options %}
+                <label for="{{ name }}" class="pure-radio">
+                    <input type="radio" id="{{ name }}" value="" /> {{ placeholder }}
+                </label>
+        {% endif %}
+    {% else %}
+    <input type="text" id="{{ str(yml_formlist_field[0]) }}" placeholder="{{ str(yml_formlist_field[1]) }}" />
+    {% endif %}
+{% endmacro %}
+
+
+{% macro fieldset(yml_formlist: list, form_blockname: str = '') %}
+    <fieldset>
+    {% for field in yml_formlist %}
+        {{ field_of_form(field) }}
+    {% endfor %}
+    </fieldset>
+
+    {% if len(form_blockname) > 0 %}
+        {% block {{ form_blockname }} %}{% endblock {{ form_blockname }} %}
+    {% endif %}
+
+{% endmacro %}
+
+
+{% macro form(headingstr: str, form_blockname: str, yml_formlist: list, form_type='default') %}
+    {% if form_type == 'default' %}
+    <form class="pure-form">
+    {% elif form_type == 'stacked' %}
+    <form class="pure-form pure-form-stacked">
+    {% elif form_type == 'aligned' %}
+    <form class="pure-form pure-form-aligned">
+    {% endif %}
+    
+        <legend>{{ headingstr }}</legend>
+        {{ fieldset(form_blockname, form_type) }}
+        {% block "fieldsets_{{ form_blockname }}" %}{% endblock %}
+    </form>
+{% endmacro %}
+
+
+{% macro table_element(content_list: list) %}
+
+    {% for table_cell in content_list %}
+        <td>{{ table_cell }}</td>
+    {% endfor %}
+
+{% endmacro %}
+
+
+{% macro tablerows(tablerow_lists: list) %}
+
+    {% for tablerow in tablerow_lists %}
+        <tr>
+            {{ table_element(tablerow)  }}
+        </tr>
+    {% endfor %}
+
+{% endmacro %}
+
+
+{% macro table(headinglist: list, name: str, css_classes="pure-table-striped") %}
+    <table id="{{ name }}" class="pure-table {{ css_classes }}">
+        <thead><tr>
+            {% for headingelem in headinglist %}
+                <th>{{ headingelem }}</th>
+            {% endfor %}
+        </tr></thead>
+        <tbody>
+            {% block "{{ name }}_content" %}{% endblock %}
+        </tbody>
+    </table>
+{% endmacro %}
+
+
+{% macro table_add_row(blockname: str, table_values: list) %}
+    {% block "{{ blockname }}_content" %}
+        {{ tablerows(table_values) }}
+    {% endblock %}
+{% endmacro %}

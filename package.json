@@ -3,8 +3,11 @@
   "version": "0.0.1",
   "private": false,
   "scripts": {
-    "dev": "python ./dunedev.py compile .",
-    "jinja": "python ./dunedev.py jinja ./templating/html/css"
+    "coffee": "python ./dundev.py compile .",
+    "jade": "python ./dunedev.py jade ./haven/views",
+    "jinja": "python ./dunedev.py jinja ./templating/html/css",
+    "j2c": "python ./dunedev.py js2coffee",
+    "dev": "python ./dunedev.py compile . && python ./dunedev.py jade ./haven/views"
   },
   "repository": {
     "type": "git",
@@ -12,8 +15,20 @@
   },
   "license": "Apache2",
   "dependencies": {
-    "flow": "^0.2.3",
+    "coffeescript": "^2.0.0",
+    "connect-assets": "^2.5.2",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "fs": "^0.0.1-security",
+    "jasmine": "^5.1.0",
+    "jasmine-expect": "^5.0.0",
+    "jasmine-spec-reporter": "^7.0.0",
     "json5": "^2.2.3",
+    "lodash": "^4.17.21",
+    "mime": "^2.0.3",
+    "mincer": "^0.4.6",
+    "morgan": "^1.10.0",
+    "url": "^0.11.3",
     "yaml": "^2.3.4"
   }
 }

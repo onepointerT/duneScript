@@ -45,17 +45,23 @@ export class Path
     relative: (pathTo) ->
         return path.relative @path pathTo
     
+    absolute: () ->
+        return path.resolve @path
+    
     set: (path) ->
         @path = path
 
     get: () ->
         return @path
+    
+    exists: () ->
+        return not (not fs.existsSync(@path))
 
 
 import { open, opendir } from 'node:fs/promises'
 
 
-export class Dir extends Path
+export class Directory extends Path
     constructor: (path) ->
         super path
     
@@ -67,6 +73,15 @@ export class Dir extends Path
         for dirent in dir
             dir_entries.push dirent
         return dir_entries
+    
+    getEntriesByRegex: (regex) ->
+        dir_entries = this.getEntries
+        regexp = new RegExp(regex)
+        matches = []
+        for dir_entry in dir_entries
+            if regex.test(dir_entry.basename())
+                matches.push dir_entry
+        return matches
     
     getDirectories: () ->
         dir_entries = this.getEntries
@@ -85,6 +100,10 @@ export class Dir extends Path
             if path.is_file
                 dir_files.push dirent
         return dir_files
+    
+    mkdir: (create_recursive = true) ->
+        if not this.exists()
+            fs.mkdirSync(@path, { recursive: create_recursive })
 
 
 

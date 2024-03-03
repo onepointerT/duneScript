@@ -1,0 +1,23 @@
+ServerProperties: {
+    host: '127.0.0.1'
+    port: '7000'
+}
+RouterProperties: {
+    siteContext: require('configuration_site')
+    mergeParametersOfParent: true
+}
+express: {
+    static: {
+        dotfiles: 'ignore'
+        etag: false
+        extensions: ['htm', 'html', 'ejs', 'js']
+        index: false
+        maxAge: '1d'
+        redirect: false
+        setHeaders: (res, path, stat) =>
+          res.set('x-timestamp', Date.now())
+    }
+    endpoints: [
+        []
+    ]
+}

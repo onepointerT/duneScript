@@ -39,13 +39,13 @@ class CoffeeCompiler:
                 CoffeeCompiler.compile(file)
             elif file.__str__().rfind('.coffeec') >= 0:
                 continue
-            elif file.__str__().rfind('.coffee') >= 0:
+            elif file.__str__().rfind('.coffee') == len(file.__str__())-7:
                 fp = file.__str__()
 
                 print("  -> CoffeeC '{0}'".format(fp))
                 CoffeeCompiler.compile(fp)
             else:
-                CoffeeCompiler.compile(file.__str__())
+                continue
 
     @staticmethod
     def compile(pathstr: str | Path):

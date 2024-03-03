@@ -27,12 +27,53 @@ The current project stage is very elementar and under active development.
 #### DBiON
 ###### A database in object notation
 
-A database that operates on `.yaml`, `.json` and `.coffee` files. Further development will integrate a rest api and the json format. Basic functionality is currently usable with python and coffeescript.
+A database that operates on `.yaml`, `.json` and `.coffee` files. Further development will integrate a rest api and the json format. Basic functionality is currently usable with python and coffeescript. Database set-ins can be installed to a databases root, to add more functionality and table requests.
 
+Here an example database config:
+
+````yaml
+- webdb: {
+  tabledir: "./db",
+  requests: "./data_request",
+  request_tmp: '#{webdb.requests}/tmp',
+  tables: ['persons', 'users', 'user_profiles'],
+  tabledef: {
+    - {
+      name: "persons",
+      ## You can rjoin fields from other tables and give them aliases
+      ### Fields from other tables with no alias are just name
+      fields: ['uid', 'users.uname alias uname', 'name'],
+      ## The condition we rjoin a fields to this table.
+      ### Omitted on no match and an empty '' on no match for e.g. uid
+      cond: 'uid is users.uid',
+    },
+    {
+      name: 'users',
+      fields: ['uid', 'uname', 'pw', 'persons.name', 'email'],
+      cond: 'uid is persons.uid',
+    },
+    {
+      name: 'user_profiles',
+      fields: ['uid', 'last_login', 'img_href'],
+      ## One may could want to join a table with some fields from a new table.
+      joins: [
+        {
+          fields: 'last_login', 
+          join_table: 'users',
+          cond: 'uid is users.uid'
+        },
+        {
+          fields: 'img_href',
+          join_table: 'persons',
+          cond: 'uid is persons.uid',
+          alias: 'img_src'
+        }
+      ]
+    }
+  }
+}
 ````
-directories
-- dbion 
-````
+
 
 #### Teas
 ###### A template environment artifical solver

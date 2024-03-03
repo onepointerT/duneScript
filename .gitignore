@@ -44,3 +44,5 @@ docs/_build/
 *.js
 venv
 .idea
+node_modules
+repos
