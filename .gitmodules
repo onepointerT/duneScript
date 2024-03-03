@@ -1,0 +1,15 @@
+[submodule "teas/jade"]
+	path = teas/jade
+	url = https://github.com/onepointerT/jade.git
+
+[submodule "teas/jinja"]
+	path = teas/jinja
+	url = https://github.com/onepointerT/jinja.git
+
+[submodule "cacao"]
+	path = cacao
+	url = https://github.com/onepointerT/cacao.git
+
+[submodule "morgan"]
+	path = morgan
+	url = https://github.com/onepointerT/morgan.git
