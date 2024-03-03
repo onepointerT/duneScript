@@ -140,8 +140,9 @@ class ServerApplication extends Application
                 res.render 'error'
         
     class ServerEventQueueHandler extends event.EventQueueHandler
-        constructor: (@eventHandlerProperties = EventHandlerProperties) ->
-            super(@eventHandlerProperties)
+        constructor: (event_handler_properties = EventHandlerProperties) ->
+            super(event_handler_properties)
+            @eventHandlerProperties = event_handler_properties
 
     class ServerEventProcessor extends event.EventProcessor
         constructor: () ->

@@ -15,10 +15,12 @@ class Application extends EventProcessor
 
     @config_default_values: () -> return Application.ApplicationProperties + {}
 
-    constructor: (@req, @res, @eventqueuehandlerclass, @config = Application.config_default_values()) ->
+    constructor: (@req, @res, eventqueuehandlerclass, @config = Application.config_default_values()) ->
+        eqhc = type(eventqueuehandlerclass) 
+        super(eqhc, 5)
         @pathInfo = url.parse @req.url, true
         @eventQueueHandler = new type(@eventqueuehandlerclass)(@config['event_queue_handler'])
-        super(@EventQueueHandler, 5)
+        @eventqueuehandlerclass = type(eventqueuehandlerclass)
     
     process: (func, args...) ->
         if /^\/javascripts\//.test @pathinfo.pathname

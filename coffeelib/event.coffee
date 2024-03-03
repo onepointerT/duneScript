@@ -112,7 +112,7 @@ class EventQueueHandler extends EventHandler
     
     process_now: (event, param, args...) ->
         this.pre_processing event, param, args
-        retval = event.eventFunctionality(super)
+        retval = event.eventFunctionality(super())
         this.after_processing event, param, args
         return retval
 
@@ -138,8 +138,8 @@ class EventQueueHandler extends EventHandler
 
 
 class EventProcessStarter extends Event
-    constructor: (@event_queue_handler, @event_processor) ->
-        super(@event_queue_handler)
+    constructor: (event_queue_handler, @event_processor) ->
+        super(event_queue_handler)
 
     eventFunctionality() ->
         @event_processor.process()
