@@ -15,10 +15,10 @@ class Semaphore
     class Event extends BaseEvent
         options = Semaphore.Reasoner.Options
         class Reflector extends BaseEvent.Reflector
-            startEvent: () => yield 'event_started'
-            startEvent: (semaphore) => yield 'event_started_with_semaphore'
-            answerEvent: () => yield 'event_answered'
-            awaitFor: () => yield 'await_now'
+            startEvent: () => return 'event_started'
+            startEvent: (semaphore) => return 'event_started_with_semaphore'
+            answerEvent: () => return 'event_answered'
+            awaitFor: () => return 'await_now'
             awaitFor: (semaphore) =>
                 return semaphore.awaitFor '' + await_locktype + ' ' + await_version, this
 
@@ -73,7 +73,7 @@ class Semaphore
 
         constructor(@semaphore, @eventQueueHandler) ->
             @queue = new Queue()
-            @awaitsfor = new 
+            @eventQueueHandler.install_queue @queue
         
 
         awaitnext: () ->
@@ -116,7 +116,7 @@ class Semaphore
             return [opt, event]
 
         startNow: () ->
-            opt = Semaphore.Reasoner.Options{
+            opt = Semaphore.Reasoner.Options += {
                 awaitfor_locktype: 'reasoner'
                 awaitfor_version: '-1'
                 lockobject_type: 'semaphore.reasoner'
