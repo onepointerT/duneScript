@@ -1,5 +1,5 @@
 
-import { strfind, strfindpos } from '../coffeelib/str'
+import { strcount, strcountprefix, strfind, strfindpos, strfindr } from '../coffeelib/str'
 import Pair from '../coffeelib/tuple'
 
 
@@ -140,17 +140,59 @@ class DataFormat
         find_previous: () -> return strfindpos(document.full, document.previous)
         find_next: () -> return strfindpos(document.full, document.next)
 
+        whitespaces:
+            level: 0
+            prefixed: 0
+
+            strip_current_level: (element) ->
+                count_linebreaks = strcount(element, '\n')
+
+                next_newline = (idx) ->
+                    pos_current_newline = strfind(element, '\n', idx)
+                    return element[pos_current_newline+1..]
+
+                i = 0
+                new_elem = ''
+                while i < count_linebreaks
+                    current_lane = next_newline i
+                    new_elem += strreplaceprefix(next_newline, ' ')
+                    i += 1
+                return new_elem
+
+
+        element:
+            full: ''
+            key: ''
+            content: ''
+            delimiter_end: ''
+
+            update: () ->
+                pos_content_start = strfind(document.element.full, @keyDelimiter)
+                if @keyDelimiter.length is 0
+                    document.element.key = ''
+                document.element.content = document.element.full[pos_content_start..]
+                if @delimiterElementEnd.length > 0
+                    pos_delimiter_end = strfindr(document.element.full, @delimiterElementEnd, document.element.full.length-@delimiterElementEnd.length*4)
+                    document.element.delimiter_end = document.element.content[pos_delimiter_end..]
+                    document.element.content = document.element.content[..pos_delimiter_end]
+        
+        update_current: () ->
+            document.element.full = document.current
+            document.element.update()
+
         previous_element: () ->
             pos = find_previous
             document.next = document.current
             document.current = document.previous
             document.previous = document.full[pos.start..pos.end]
+            update_current
 
         next_element: () ->
             pos = find_next
             document.previous = document.current
             document.current = document.next
             document.next = document.full[pos.start..pos.end]
+            update_current
 
 
-    constructor: () ->
+    constructor: (@keyDelimiter = ': ', @data_type = DataTypes, @delimiterElementEnd = '') ->

@@ -4,10 +4,15 @@ import { Multiqueue, BFS } from './queue.js'
 
 
 class Event
+    # A class using this could implement a Event.Reflector
+    class Reflector
+        startEvent: () => return false # DO something
+        answerEvent: () => return true
+
     ## This function can be edited inlinely with `Event::eventFunctionality = ->` and is also called from the constructor
     # Class:: means always the prototype of a class, e.g. `Event.prototype.*`, while ``=>` makes property-like things.
     ## For more information have a look at https://coffeescript.org/#prototypal-inheritance and above
-    eventFunctionality: (multiQueue = @multiQueue) ->
+    eventFunctionality: (configuration = @configuration) ->
         # Do something with the objects from multiQueue
         if this.testIntegrity()
             # Run some event functions
@@ -19,27 +24,18 @@ class Event
     # e.eventFunction((m) => {
     #       console.log m.data
     # }, BFS() )
-    eventFunction: (func, multiQueue = @multiQueue) ->
+    eventFunction: (func, configuration = @configuration) ->
         return func(multiQueue)
 
     # Can also get a json- or yml-like `{}` or a multiqueue from queue.coffee
-    constructor: (@multiQueue = {}) ->
+    constructor: (@configuration = { eventType: 'BaseEvent' }) ->
     
     ## Like the function `eventFunctionality` this function can be specialized with `Event::testIntegrity = ->`
-    testIntegrity: () ->
+    testIntegrity: () =>
         return true
-
-    push: (elem) ->
-        @multiQueue.push elem
     
-    pushMulti: (elems) ->
-        @multiQueue.pushMulti elems
-    
-    pop: () ->
-        return @multiQueue.pop()
-    
-    queue: () ->
-        return @multiQueue
+    config: () ->
+        return @configuration
 
 
 class EventHandler
@@ -66,7 +62,7 @@ class EventHandler
                 return false
             return event
 
-    constructor: (@bivariateDict = {}) ->
+    constructor: (@options = {}) ->
         @eventQueue = new Multiqueue(3)
 
     preDo: (event, param='') -> return event
@@ -88,7 +84,7 @@ class EventHandler
     # Please modify and specialize in your own classes with `EventHandler::afterDo = ->` or `EventHandler::after = ->`
     after: (event, param = '') ->
         if not event?
-            return html
+            return param
         @eventQueue = event.queue()
 
         # DO SOMETHING AFTER DOING `ejs.render`
@@ -98,41 +94,60 @@ class EventHandler
 
         return event
     
-    properties: () -> return @bivariateDict
+    properties: () -> return @options
 
 
 EventQueueHandlerProperties: {
     process_incoming: false
+    queue: undefined
 }
 
 
-class EventQueueHandler extends EventHandler
-    constructor: (bivariateDict = EventQueueHandlerProperties) ->
-        super(bivariateDict)
+class EventQueueHandler
+    constructor: (@opts = EventQueueHandlerProperties) ->
+        @queue = opts.queue
     
+    install_queue: (queue) ->
+        @queue = queue
+
+
     process_now: (event, param, args...) ->
         this.pre_processing event, param, args
-        retval = event.eventFunctionality(super())
+        retval = event.eventFunctionality()
         this.after_processing event, param, args
         return retval
+
+    push: (event) ->
+        event = this.pre_push event, 'push'
+        @queue.push event
+        this.after_push event, 'push'
+        return event
+
+    pop: () ->
+        try
+            this.pre_pop undefined, 'pop'
+        catch Error
+            return undefined
+        event = @queue.pop()
+        event = this.after_pop event, event
+        return event
 
     pre_push: (event, param = '') ->
         if @bivariateDict.process_incoming
             return this.process_now event, param
-        return super.pre event, param
     
     after_push: (event, param = '') ->
-        return super.after event, param
     
     pre_pop: (event, param = '') ->
-        return super.pre event, param
     
     after_pop: (event, element) ->
-        return super.after event, element
+        return element
     
+    pre_processing: (event, param = '') -> return true
     pre_processing: (event, func, args...) ->
         return true
     
+    after_processing: (event, param = '') -> return true
     after_processing: (event, func, args...) ->
         return true
 

@@ -1,3 +1,12 @@
+
+[submodule "coffeelib/fs"]
+	path = coffeelib/fs
+	url = https://github.com/onepointerT/fs.git
+
+[submodule "coffeelib/mokka"]
+	path = coffeelib/mokka
+	url = https://github.com/onepointerT/mokka.git
+	
 [submodule "teas/jade"]
 	path = teas/jade
 	url = https://github.com/onepointerT/jade.git

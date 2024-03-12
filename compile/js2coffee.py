@@ -19,7 +19,7 @@ class Js2CoffeeCompiler:
         fn = fp[:pos_ext]
 
         # Recompile
-        cmd = 'js2coffee {0} > {1}.coffee'.format(fp, fn)
+        cmd = 'js2coffee -i 4 {0} > {1}.coffee'.format(fp, fn)
         print("    => {0}".format(cmd))
 
         if os.system(cmd) != 0:

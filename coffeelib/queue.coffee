@@ -17,16 +17,23 @@ class Queue extends []
     
     hasElem: () ->
         return (this.length > 0)
+    
+    pushMulti: (items) ->
+        for item in items
+            this.push item
 
 
 class Multiqueue extends Queue
-    constructor: (@queueCount) ->
+    constructor: (@queueCount, queue_base_class = Queue) ->
         super()
         @queues = [Queue]
         for i in [0..@queueCount]
-            @queues.push new Queue()
+            this.new_queue queue_base_class
         # TODO: Check size
     
+    new_queue: (queue_base_class) ->
+        @queues.push new (typeof queue_base_class)()
+
     next: () ->
         for i in [0..@queueCount]
             if @queues[i].length > 0
@@ -70,10 +77,6 @@ class Multiqueue extends Queue
         if queue_num < @queue.length
             @queue[queue_num].push item
     
-    pushMulti: (items) ->
-        for item in items
-            this.push item
-    
     pop: () ->
         [lq, lql] = this.longestQueue()
         return @queue[lq].pop()
@@ -82,6 +85,48 @@ class Multiqueue extends Queue
         if queue_num > @queue.length - 1
             return null
         return @queue_num[queue_num].pop()
+
+
+
+class MultiqueueNamed extends Multiqueue
+    class QueuePairNamed
+        name: ''
+        queue: undefined
+
+        constructor: (queue_name, new_queue = undefined) ->
+            @name = queue_name
+            if queue is undefined
+                @queue = new Queue
+            else
+                @queue = new Queue
+
+        length: () -> return @queue.length
+        push: (elem) -> @queue.push elem
+        pop: () -> return @queue.pop()
+        popFrom: (i) ->
+            elem = @queue[i]
+            delete @queue[i]
+            return elem
+    
+    constructor: (queue_base_class) ->
+        super(0)
+
+    findByName: (queue_name) ->
+        for queue_pair in @queue
+            if queue_pair.name is queue_name
+                return queue_pair
+        return undefined
+    
+    popOf: (queue_name) ->
+        queue = this.findByName queue_name
+        if queue?
+            return queue.pop()
+        return undefined
+
+    pushIn: (queue_name, item) ->
+        queue = this.findByName queue_name
+        if queue?
+            queue.push item
 
 
 
