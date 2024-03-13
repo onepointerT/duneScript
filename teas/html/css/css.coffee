@@ -3,7 +3,59 @@ import Yaml from 'dbion/dbiondb'
 # yml = Yaml.read('./css.yml').data()
 cssyml = require('./css.yml') assert { type: 'yaml' }
 
-purecss =
+bootstrap:
+   version: '5.3.3'
+   href: "https://cdn.jsdelivr.net/npm/bootstrap@#{ bootstrap.version }/dist/"
+   modules: ['css/bootstrap.min.css', 'js/bootstrap.bundle.min.js']
+   modulehrefs: href + m for m in modules
+   menuitems: cssyml.menuitems
+   menu_type: 'vertical'
+   html_out: 'bootstrap.html'
+   yml: cssyml
+
+   includecss: () ->
+        jinja = """{% include 'css.jinja' as css %}
+            {% include 'bootstrapcss.jinja' as bootstrap %}
+            {{ bootstrap.includebootstrap(#{ bootstrap.version })  }}
+        """
+        return jinja
+
+    form:
+        make_form: (heading, formlist = cssyml.forms.testforms.formlist, form_blockname = '') ->
+            return "{{ pure.form(#{heading}, #{form_blockname}, #{formlist}, #{form_type}) }}"
+        
+        # Accepts YAML mapping object with the attributes [blockname, heading, type, formlist] like given in css.yml for forms.testform
+        make_form: (ymlform = cssyml.forms.testform) ->
+            return form.make_form(ymlform.heading, ymlform.type, ymlform.formlist, ymlform.blocklist)
+    
+    table:
+        types: {
+            Default: 'default'
+            Horizontal: 'horizontal'
+            Striped: 'striped'
+            Bordered: 'bordered'
+        }
+
+        make_table: (table_obj = cssyml.tables.testtable, table_type = table.types.Horizontal) ->
+            if table_type is table.types.Horizontal
+                css_classes = "table-sm " + table_obj.cssclass
+            else if table_type is table.types.Striped
+                css_classes = "table-striped " + table_obj.cssclass
+            else if table_type is table.types.Bordered
+                css_classes = "table-bordered " + table_obj.cssclass
+            else
+                css_classes = table_obj.cssclass
+            return """{{ bootstrap.table(#{table_obj.columns}, #{table_obj.nameid}, #{css_classes}) }}"""
+        
+        fill_table: (table_obj = cssyml.tables.testtable, table_values = [[]]) ->
+            return """{{ bootstrap.table_add_rows(#{table_obj.nameid}, #{table_values}) }}"""
+    
+    make_layout: () ->
+        return """<title>#{cssyml.heading}</title>"""
+
+
+
+purecss:
    version: '3.0.0'
    href: "https://cdn.jsdelivr.net/npm/purecss@#{ purecss.version }/build/"
    modules: ['pure.css']
@@ -16,7 +68,7 @@ purecss =
    includecss: () ->
         jinja = """{% include 'css.jinja' as css %}
             {% include 'purecss.jinja' as pure %}
-            {{ css.includecss_multi(#{ purecss.modulehrefs })  }}
+            {{ pure.includepure(#{ purecss.version })  }}
         """
         return jinja
 
@@ -85,11 +137,11 @@ purecss =
         }
 
         make_table: (table_obj = cssyml.tables.testtable, table_type = table.types.Horizontal) ->
-            if table_type == table.types.Horizontal
+            if table_type is table.types.Horizontal
                 css_classes = "pure-table-horizontal " + table_obj.cssclass
-            else if table_type == table.types.Striped
+            else if table_type is table.types.Striped
                 css_classes = "pure-table-striped " + table_obj.cssclass
-            else if table_type == table.types.Bordered
+            else if table_type is table.types.Bordered
                 css_classes = "pure-table-bordered " + table_obj.cssclass
             else
                 css_classes = table_obj.cssclass

@@ -9,3 +9,14 @@
 {% endmacro %}
 
 
+{% macro include(href, modules) %}
+    {% for module in modules %}
+        {% if module[len(module)-5:] is '.css' %}
+        <link href="{{ href }}/{{ module }}" rel="stylesheet" crossorigin="anonymous">
+        {% elif module[len(module)-4] is '.js' %}
+        <script src="{{ href }}/{{ module }}" crossorigin="anonymous"></script>
+        {% endif %}
+    {% endfor %}
+{% endmacro %}
+
+

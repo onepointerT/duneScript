@@ -1,6 +1,21 @@
 {% import 'css.jinja' as css %}
 
 
+{% macro includepure(href, modules) %}
+    {% for module in modules %}
+        {% if module[len(module)-5:] is '.css' %}
+        <link href="{{ href }}/{{ module }}" rel="stylesheet" crossorigin="anonymous">
+        {% elif module[len(module)-4] is '.js' %}
+        <script src="{{ href }}/{{ module }}" crossorigin="anonymous"></script>
+        {% endif %}
+    {% endfor %}
+{% endmacro %}
+
+
+{% macro includepure(version) %}
+    <link href="https://cdn.jsdelivr.net/npm/purecss@{{ version }}/build/" rel="stylesheet" crossorigin="anonymous">
+{% endmacro %}
+
 {% macro heading(headingstr) %}
     <span class="pure-menu-heading">{{ headingstr }}</span>
 {% endmacro %}
@@ -13,9 +28,9 @@
 {% endmacro %}
 
 {% macro menu(headingstr: str, menu_type: str, menu_item_blockname: str = 'main_menu_items') %}
-    {% if menu_type == 'vertical' %}
+    {% if menu_type is 'vertical' %}
     <div class="pure-menu custom-restricted-width">
-    {% elif menu_type == 'horizontal' %}
+    {% elif menu_type is 'horizontal' %}
     <div class="pure-menu pure-menu-horizontal">
     {% endif %}
 
@@ -41,22 +56,22 @@
 
     {% if {{ yml_formlist_field[2] }} is not None %}
         {% set type = str({{ yml_formlist_field[2] }}) %}
-        {% if type == 'text' or type == 'email' %}
+        {% if type is 'text' or type is 'email' %}
             <input type="{{ type }}" id="{{ name }}" placeholder="{{ placeholder }}" />
-        {% elif type == 'submit' %}
+        {% elif type is 'submit' %}
             <button type="submit" id="{{ name }}" class="pure-button pure-button-primary">{{ placeholder }}</button>
-        {% elif type == 'checkbox' %}
+        {% elif type is 'checkbox' %}
                 <label for="{{ name }}" class="pure-checkbox">
                     <input type="checkbox" id="{{ name }}" value="" /> {{ placeholder }}
                 </label>
-        {% elif type == 'dropdown' %}
+        {% elif type is 'dropdown' %}
             {% set dropdown_options = {{ yml_formlist_field[3] }} | list() %}
             <select id="{{ name }}" class="pure-input-1-2">
                 {% for option in dropdown_options %}
                     <option>{{ option }}</option>
                 {% endfor %}
             </select>
-        {% elif type == 'radio' %}
+        {% elif type is 'radio' %}
             {% set radio_options = {{ yml_formlist_field[3] }} | list() %}
             {% for option in radio_options %}
                 <label for="{{ name }}" class="pure-radio">
@@ -84,11 +99,11 @@
 
 
 {% macro form(headingstr: str, form_blockname: str, yml_formlist: list, form_type='default') %}
-    {% if form_type == 'default' %}
+    {% if form_type is 'default' %}
     <form class="pure-form">
-    {% elif form_type == 'stacked' %}
+    {% elif form_type is 'stacked' %}
     <form class="pure-form pure-form-stacked">
-    {% elif form_type == 'aligned' %}
+    {% elif form_type is 'aligned' %}
     <form class="pure-form pure-form-aligned">
     {% endif %}
     
