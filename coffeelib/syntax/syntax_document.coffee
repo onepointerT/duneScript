@@ -10,6 +10,11 @@ class SyntaxDocument extends Document
 
     expr: [SyntaxExpression]
 
+    block:
+        content: ''
+        tag: undefined
+        delimiter: undefined
+
     constructor: (full_document) ->
         super(full_document)
     

@@ -12,6 +12,32 @@ class CodeDocument extends SyntaxDocument
             CodeIf: 'code_if'
             CodeFor: 'code_for'
             CodeSet: 'code_set'
+        
+        expr: undefined
+        expressions: {}
+
+        register_expression: (name, expression) ->
+            expressions[name] = expression
+
+        choose_expression: (name) ->
+            this.expr = this.expressions[name]
+        
+        use_here: (env, element) ->
+            env.element = element
+            if this.expr?
+                this.expr.alyze env
+                this.expr.run env
+                this.expr.run env, this.expressions[env.type]
+                this.expr.finalyze env
+            return env
+
+        use: (env, element) ->
+            # TODO Find the right expression for the current element
+            return use_here env, element
+
+        constructor: (expression, data_type, delim_end) ->
+            super '', data_type, delim_end
+            @expr = expression
 
     
     class Tag extends BaseTag

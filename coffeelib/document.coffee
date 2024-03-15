@@ -1,4 +1,5 @@
 
+import { Stack } from './stack'
 import { strcount, strcountprefix, strfind, strfindpos, strfindr } from './str'
 
 class Document extends {}
@@ -15,7 +16,18 @@ class Document extends {}
         full = full_document
         @config = configuration
         register_formats()
+    
 
+    class Environment
+        class VariableStack extends Stack
+            constructor: (type = 'env_generic', {} = configuration) ->
+                super(type, configuration)
+        
+        globals: new VariableStack()
+        element: undefined
+        doc: undefined
+
+    env: new Environment()
 
     whitespaces:
         level: 0
