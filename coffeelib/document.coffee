@@ -112,6 +112,12 @@ class Document extends {}
                 cl = this.full[strfindr(this.full, '\n', pos_current_lane-2)+1..pos_current_lane-1]
             this.whitespaces.current_lane = cl
             return this.getWholeLevel()
+        
+        getWholeInnerLevel: () ->
+            this.whitespaces.update()
+            lvl = this.whitespaces.getWholeLevel()
+            this.element.content = lvl[strfind(lvl, '\n')+1..]
+            return this.element.content
 
 
 
@@ -146,6 +152,9 @@ class Document extends {}
             this.element.update()
             return this.element.full
 
+        inner: () ->
+            return this.whitespaces.getWholeInnerLevel()
+
         next: () ->
             pos_end_element = strfind(this.full, this.element.full) + this.element.full.length
             pos_start_element = pos_end_element + 1
@@ -158,21 +167,6 @@ class Document extends {}
     update_current: () ->
         this.element.full = this.current
         this.element.update()
-
-    previous_element: () ->
-        pos = find_previous
-        this.next = this.current
-        this.current = this.previous
-        this.previous = this.full[pos.start..pos.end]
-        update_current
-
-    next_element: () ->
-        this.
-        pos = find_next
-        this.previous = this.current
-        this.current = this.next
-        this.next = this.full[pos.start..pos.end]
-        update_current
     
     class Format
         DataTypes:
