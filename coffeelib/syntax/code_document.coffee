@@ -53,6 +53,8 @@ class CodeDocument extends SyntaxDocument
             Macro: 'macro'
             Script: 'script'
 
+        expr: undefined
+
         detectType: () =>
             if content[..1] is 'if'
                 @t = Type.If
@@ -69,12 +71,28 @@ class CodeDocument extends SyntaxDocument
             else
                 @t = Type.Script
         
-        constructor: (content, delim_left, delim_right) ->
+        constructor: (content, delim_left, delim_right, expr) ->
             super(content, delim_left, delim_right)
             detectType()
 
     tags: [CodeDocument.Tag]
     tag: undefined
+
+    block +=
+        delimiter: undefined
+
+        makeTag: () ->
+        
+        find_block_end: () ->
+
+        # In a generic code document we can at least find the block ranges
+        # by identation level
+        detect_blocks_code: () ->
+            this.whitespaces.reset()
+            this.whitespaces.next_newline()
+            return this.block.detect_blocks new Range 0, this.full.length, this.full
+
+
 
     register_formats: () =>
         # Register syntactic if

@@ -162,6 +162,27 @@ strtoi: (str) ->
     return sign * result
 
 
+# Returns [before, after, inner]
+strdiffsimple: (str1, str2) ->
+    diff = [before, after, inner] = ['', '', '']
+    
+    if strfind(str1, str2) > -1
+        inner = str2
+        outer = str1
+    else if strfind(str2, str1) > -1
+        inner = str1
+        outer = str2
+    else return diff
+
+    pos_inner = strfind(outer, inner)
+    pos_end_inner = pos_inner + inner.length
+
+    before = outer[..pos_inner]
+    after = outer[pos_end_inner+1..]
+    
+    return diff
+
+
 listtostr: (listelements) ->
     newstr = '['
     for elem, i in listelements

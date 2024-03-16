@@ -49,6 +49,8 @@ class Document extends {}
             if this.whitespaces.current_lane.length > 0
                 pos_current_lane = strfind(this.full, this.whitespaces.current_lane,
                                             if this.whitespaces.current_pos < 0 then 0 else this.whitespaces.current_pos)
+            else if this.whitespaces.current_pos > -1
+                this.whitespaces.current_lane = this.full[this.whitespaces.current_pos..strfind(this.full, '\n', this.whitespaces.current_pos)]
             else
                 pos_current_lane = 0
                 this.whitespaces.current_lane = this.full[..strfind(this.full, '\n')]
@@ -110,7 +112,7 @@ class Document extends {}
             this.element.reset()
             this.element.full = new_element
             this.element.delimiter_end = '\n'
-            return new_element
+            return new Range pos_current_lane, pos_current_lane + new_element.length, new_element
         
         getWholeLevelBefore: () ->
             this.whitespaces.update()
@@ -125,11 +127,48 @@ class Document extends {}
             this.whitespaces.current_lane = cl
             return this.getWholeLevel()
         
+        # Returns a Document.Range
         getWholeInnerLevel: () ->
             this.whitespaces.update()
-            lvl = this.whitespaces.getWholeLevel()
-            this.element.content = lvl[strfind(lvl, '\n')+1..]
-            return this.element.content
+            this.element.full = this.whitespaces.getWholeLevel()
+            this.whitespaces.detect_start_inner()
+            pos_start_inner = this.whitespaces.current_pos
+
+            elem_full = this.element.full
+            elem_inner = elem_full[pos_start_inner..]
+            
+            return new Range pos_start_inner, pos_start_inner + elem_inner.length, elem_inner
+        
+        find_next_block: () ->
+            content = this.whitespaces.current_lane
+            
+            pos_first_newline = strfind(content, '\n')
+            this.whitespaces.reset()
+            this.whitespaces.current_pos = pos_first_newline + 1
+            this.whitespaces.next_newline()
+
+        detect_start_inner: (content) ->
+            lane = content[..strfind(content, '\n')]
+            newline_count = strcount(content, '\n')
+            lane_idx = 0
+            whitespace_depth = strcountprefix(lane, ' ')
+            while lane_idx < newline_count
+                pos_current_lane = strfind(content, lane, pos_current_lane)
+                whitespace_depth_current = strcountprefix(lane, ' ')
+                if whitespace_depth < whitespace_depth_current
+                    return pos_current_lane
+
+                lane = content[pos_current_lane+lane.length+1..strfind(content, '\n', pos_current_lane)]
+                lane_idx += 1
+            return -1
+
+        detect_start_inner: () ->
+            return detect_start_inner this.element.full
+        
+        fromElement: () ->
+            pos_first_newline = strfind(this.element.full, '\n')
+            this.whitespaces.current_lane = this.element.full[..pos_first_newline+1]
+
 
 
 
@@ -288,3 +327,13 @@ class Document extends {}
             return element[wte.start.length..element.length-wte.start.length-wte.end.length]
 
         constructor: (@keyDelimiter = ': ', @data_type = DataTypes, @delimiterElementEnd = '') ->
+
+    class Range
+        start: 0
+        end: 0
+        content: ''
+
+        constructor: (range_start, range_end, range_content = '') ->
+            @start = range_start
+            @end = range_end
+            @content = range_content

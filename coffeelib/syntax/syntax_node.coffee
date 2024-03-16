@@ -5,6 +5,14 @@ class SyntaxNode extends Node
     Type =  Node.Type +=
         Syntax: 'syntax'
     
+    id: ''
+    body: ''
+    left: ''
+    right: ''
+    precending: undefined
+    following: undefined
+    code: left + body + right
+
     defaults: () =>
         id: ''
         body: ''
